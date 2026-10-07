@@ -1,0 +1,1789 @@
+/* ============================================================================
+   BoltBlocks stylesheet (PRISM). One file, no build step, no @import.
+
+   HOW TO READ THIS FILE (teachers: every section starts with a banner)
+     1  RESET          tiny normaliser
+     2  TOKENS         colours, type, space, motion. Change a look here, nowhere else.
+     3  BASE           page, text, links, the keyboard focus ring
+     4  LAYOUT         top bar, the two-column app, stacking on small screens
+     5  COMPONENTS     buttons, fields, menu, stage, sprites, lessons, dialogs, toasts
+     6  BLOCKLY HOST   the box Blockly lives in + our zoom buttons
+     7  UTILITIES      visually-hidden helpers, hidden-label rules for small screens
+     8  MOTION         every animation and transition (all removed for reduced motion)
+     9  BLOCKLY SKIN   re-skin of Blockly's own DOM (UNLAYERED on purpose, see banner)
+
+   Rules of the house
+     * Colours come from tokens (--bb-*, --cat-*). No new raw hex outside section 2.
+     * Logical properties only (inline/block), so Arabic (RTL) mirrors for free.
+     * Anything that moves lives in section 8 and only inside
+       prefers-reduced-motion: no-preference. The stage canvas animation is the
+       child's program (JavaScript), not decoration, and is never touched here.
+   ============================================================================ */
+
+/* Order matters: later layers win. `blockly` sits above components so host rules
+   beat generic ones; `motion` is last so reduced-motion can always switch it off. */
+@layer reset, tokens, base, layout, components, blockly, utilities, motion;
+
+
+/* ============================================================================
+   1  RESET
+   ============================================================================ */
+@layer reset {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+  body, h1, h2, h3, h4, p, ul, ol, dl, dd, figure { margin: 0; }
+  ul, ol { padding: 0; }
+  ul[class], ol[class] { list-style: none; }
+
+  img, svg, canvas { display: block; max-inline-size: 100%; }
+
+  button, input, select, textarea {
+    font: inherit; color: inherit; letter-spacing: inherit; margin: 0;
+  }
+  button { padding: 0; border: 0; background: none; cursor: pointer; }
+
+  /* Author `display` rules must never un-hide an element the app hid. */
+  [hidden] { display: none !important; }
+
+  dialog { padding: 0; border: 0; color: inherit; max-inline-size: none; max-block-size: none; }
+}
+
+
+/* ============================================================================
+   2  TOKENS (MUSE's system, docs/design.md section 2)
+   Dark values exist twice: the attribute form and the no-attribute media
+   fallback. Edit both together (R5). `light-dark()` is avoided on purpose
+   (older tablets).
+   ============================================================================ */
+@layer tokens {
+  /* ---------- theme independent ---------- */
+  :root {
+    /* Block categories: EXACT hexes from architecture.md section 5 (toolbox order). */
+    --cat-events:    #FFBF00;
+    --cat-motion:    #4C97FF;
+    --cat-looks:     #9966FF;
+    --cat-sound:     #CF63CF;
+    --cat-pen:       #00B4A6;
+    --cat-control:   #FFAB19;
+    --cat-sensing:   #5CB1D6;
+    --cat-operators: #59C059;
+    --cat-variables: #FF8C1A;
+    --cat-myblocks:  #FF6680;
+    --ink-on-cat:    #1B1B3A;   /* ADR 0006: bold ink text on every category fill */
+    --bb-block-edge: #1B1B3A;   /* block and rail-dot outline, both themes */
+
+    /* Focus ring: ink band inside + white band outside. Over light surfaces the
+       ink carries (>= 14:1); over dark surfaces the white carries (>= 13:1). */
+    --bb-focus-inner: #1B1B3A;
+    --bb-focus-outer: #FFFFFF;
+    --bb-focus-inner-w: 2px;
+    --bb-focus-outer-w: 3px;
+
+    /* Block states (Blockly SVG paths) */
+    --bb-select-edge: #1B1B3A;
+    --bb-select-halo: #FFFFFF;
+    --bb-running-edge: #1B1B3A;
+    --bb-running-glow: #FFD60A;
+
+    --bolt-body: #4C97FF; --bolt-shade: #2F6FD6; --bolt-accent: #FFD60A; --bolt-eye: #8DF5E4;
+    --bb-flag: #19A051;
+    --bb-stop: #E5383B;
+
+    /* Type */
+    --bb-font-ui: "Nunito", ui-rounded, "SF Pro Rounded", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --bb-font-ar: "Cairo", "Segoe UI", Tahoma, system-ui, sans-serif;
+    --bb-font: var(--bb-font-ui);
+    --bb-fw-body: 600;
+    --bb-fw-ui: 700;
+    --bb-fw-display: 800;
+    /* Fluid and rem-based so browser zoom and text-size settings scale it. */
+    --bb-text-xs:  clamp(0.8125rem, 0.79rem + 0.10vw, 0.875rem);
+    --bb-text-sm:  clamp(0.875rem,  0.85rem + 0.12vw, 0.9375rem);
+    --bb-text-base:clamp(1rem,      0.96rem + 0.20vw, 1.125rem);
+    --bb-text-md:  clamp(1.125rem,  1.06rem + 0.30vw, 1.3125rem);
+    --bb-text-lg:  clamp(1.3125rem, 1.20rem + 0.55vw, 1.625rem);
+    --bb-text-xl:  clamp(1.625rem,  1.40rem + 1.00vw, 2.25rem);
+    --bb-text-2xl: clamp(2rem,      1.60rem + 1.80vw, 3.25rem);
+    --bb-lh-tight: 1.2;
+    --bb-lh-body:  1.5;
+
+    /* Space (4px base) */
+    --bb-space-1: 0.25rem;  --bb-space-2: 0.5rem;   --bb-space-3: 0.75rem;
+    --bb-space-4: 1rem;     --bb-space-5: 1.25rem;  --bb-space-6: 1.5rem;
+    --bb-space-8: 2rem;     --bb-space-10: 2.5rem;  --bb-space-12: 3rem;   --bb-space-16: 4rem;
+
+    /* Size */
+    --bb-hit: 2.75rem;            /* 44px primary targets */
+    --bb-hit-min: 1.5rem;         /* 24px absolute floor */
+    --bb-edge-w: 3px;
+    --bb-edge-w-thin: 2px;
+    --bb-lip: 4px;
+    --bb-topbar-h: 4rem;
+    --bb-rail-w: 6.25rem;         /* 100px: leaves 73px for a label; the widest ("Operators" 66.9, AR 66.5) needs ~67 */
+    --bb-rail-w-compact: 3.5rem;
+    --bb-icon: 1.5rem;
+
+    /* Radius: pills for buttons, md inputs/tiles/toasts, lg panels, xl dialogs */
+    --bb-r-sm: 0.5rem;
+    --bb-r-md: 0.875rem;
+    --bb-r-lg: 1.25rem;
+    --bb-r-xl: 1.75rem;
+    --bb-r-pill: 999px;
+
+    /* Elevation: hard brick "lips", ink-tinted, never pure black */
+    --bb-shadow-0: none;
+    --bb-shadow-1: 0 2px 0 var(--bb-lip-color);
+    --bb-shadow-2: 0 4px 0 var(--bb-lip-color);
+    --bb-shadow-3: 0 6px 0 var(--bb-lip-color), 0 14px 24px -10px var(--bb-shadow-soft);
+    --bb-shadow-4: 0 8px 0 var(--bb-lip-color), 0 28px 48px -14px var(--bb-shadow-soft);
+    --bb-shadow-pressed: 0 0 0 var(--bb-lip-color);
+
+    /* Motion */
+    --bb-dur-instant: 80ms;
+    --bb-dur-fast: 140ms;
+    --bb-dur-base: 220ms;
+    --bb-dur-slow: 380ms;
+    --bb-dur-cheer: 1800ms;
+    --bb-dur-pulse: 1200ms;
+    --bb-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --bb-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+    --bb-ease-boing: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    /* Systemic layers only (native <dialog> uses the top layer and ignores z-index) */
+    --bb-z-rail: 1;  --bb-z-topbar: 20;  --bb-z-menu: 30;  --bb-z-notice: 25;  --bb-z-toast: 50;
+
+    /* PRISM additions: how strongly a category tints its selected rail row, and
+       how the (recolour-proof) trashcan picture is adapted per theme. */
+    --bb-cat-hover-mix: 14%;
+  }
+
+  /* ---------- LIGHT ---------- */
+  :root, :root[data-theme="light"] {
+    color-scheme: light;
+    --bb-ground:        #E9EDFF;
+    --bb-surface:       #FFFFFF;
+    --bb-panel:         #F6F7FF;
+    --bb-ink:           #1B1B3A;
+    --bb-ink-muted:     #4B4F80;
+    --bb-line:          #CDD2F0;
+    --bb-line-strong:   #6F74A8;
+    --bb-edge:          #1B1B3A;
+    --bb-lip-color:     #1B1B3A;
+    --bb-accent:        #FFD60A;
+    --bb-accent-hover:  #FFE45C;
+    --bb-accent-ink:    #1B1B3A;
+    --bb-inverse-bg:    #1B1B3A;
+    --bb-inverse-ink:   #FFFFFF;
+    --bb-danger:        #C4262E;
+    --bb-danger-ink:    #FFFFFF;
+    --bb-success:       #17713A;
+    --bb-success-ink:   #FFFFFF;
+    --bb-input-bg:      #FFFFFF;
+    --bb-workspace:     #FAFBFF;
+    --bb-grid:          #D3D9F3;
+    --bb-toolbox:       #FFFFFF;
+    --bb-flyout:        #E9EDFF;
+    --bb-stage-bg:      #FFFFFF;   /* white in BOTH themes: sprites are drawn for it */
+    --bb-stage-frame:   #1B1B3A;
+    --bb-scroll:        #6F74A8;
+    --bb-scrim:         rgb(27 27 58 / 0.55);
+    --bb-shadow-soft:   rgb(27 27 58 / 0.28);
+    --bb-cat-mix:       24%;
+    --bb-trash-filter:  brightness(1);
+  }
+
+  /* ---------- DARK (explicit choice, stamped on <html> by the boot script) ---------- */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bb-ground:        #12122B;
+    --bb-surface:       #1C1C3F;
+    --bb-panel:         #232350;
+    --bb-ink:           #F2F3FF;
+    --bb-ink-muted:     #B7BBE6;
+    --bb-line:          #34346E;
+    --bb-line-strong:   #7C81C0;
+    --bb-edge:          #7C81C0;
+    --bb-lip-color:     #0A0A20;
+    --bb-accent:        #FFD60A;
+    --bb-accent-hover:  #FFE45C;
+    --bb-accent-ink:    #1B1B3A;
+    --bb-inverse-bg:    #F2F3FF;
+    --bb-inverse-ink:   #1B1B3A;
+    --bb-danger:        #FF8A8A;
+    --bb-danger-ink:    #1B1B3A;
+    --bb-success:       #5EE08A;
+    --bb-success-ink:   #1B1B3A;
+    --bb-input-bg:      #12122B;
+    --bb-workspace:     #181838;
+    --bb-grid:          #2F2F63;
+    --bb-toolbox:       #1C1C3F;
+    --bb-flyout:        #2A2A5E;
+    --bb-stage-bg:      #FFFFFF;
+    --bb-stage-frame:   #7C81C0;
+    --bb-scroll:        #7C81C0;
+    --bb-scrim:         rgb(5 5 18 / 0.72);
+    --bb-shadow-soft:   rgb(2 2 12 / 0.6);
+    --bb-cat-mix:       30%;
+    --bb-trash-filter:  invert(0.9) hue-rotate(180deg);
+  }
+
+  /* ---------- DARK (system preference, when no explicit light choice exists) ----------
+     Same declarations as the block above; keep in sync (SENTRY diffs them). */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bb-ground: #12122B;  --bb-surface: #1C1C3F;  --bb-panel: #232350;
+      --bb-ink: #F2F3FF;     --bb-ink-muted: #B7BBE6;
+      --bb-line: #34346E;    --bb-line-strong: #7C81C0;  --bb-edge: #7C81C0;  --bb-lip-color: #0A0A20;
+      --bb-accent: #FFD60A;  --bb-accent-hover: #FFE45C; --bb-accent-ink: #1B1B3A;
+      --bb-inverse-bg: #F2F3FF;  --bb-inverse-ink: #1B1B3A;
+      --bb-danger: #FF8A8A;  --bb-danger-ink: #1B1B3A;
+      --bb-success: #5EE08A; --bb-success-ink: #1B1B3A;
+      --bb-input-bg: #12122B;
+      --bb-workspace: #181838;  --bb-grid: #2F2F63;  --bb-toolbox: #1C1C3F;  --bb-flyout: #2A2A5E;
+      --bb-stage-bg: #FFFFFF;   --bb-stage-frame: #7C81C0;  --bb-scroll: #7C81C0;
+      --bb-scrim: rgb(5 5 18 / 0.72);  --bb-shadow-soft: rgb(2 2 12 / 0.6);
+      --bb-cat-mix: 30%;  --bb-trash-filter: invert(0.9) hue-rotate(180deg);
+    }
+  }
+
+  /* Arabic: Cairo first, more leading, never letter-spacing (it breaks joining). */
+  :root:lang(ar) { --bb-font: var(--bb-font-ar); --bb-lh-tight: 1.35; --bb-lh-body: 1.75; }
+
+  /* No size-adjust / ascent-override fallback @font-face on purpose (docs/perf.md 3.4): measured swap CLS is
+     0.0013, Nunito's 600/800/900 weights differ by +-5% so one fallback face cannot match them all, and
+     Android may not resolve local("Arial"). Revisit only if field CLS from the font swap exceeds ~0.02. */
+}
+
+
+/* ============================================================================
+   3  BASE
+   ============================================================================ */
+@layer base {
+  html {
+    background: var(--bb-ground);
+    color: var(--bb-ink);
+    font-family: var(--bb-font);
+    /* Keep keyboard-focused things clear of the fixed toast strip (WCAG 2.4.11). */
+    scroll-padding-block: 1rem 6rem;
+    /* Safety net only: the layout below is built not to overflow sideways. */
+    overflow-x: clip;
+  }
+
+  body {
+    min-block-size: 100vh;
+    min-block-size: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bb-ground);
+    color: var(--bb-ink);
+    font: var(--bb-fw-body) var(--bb-text-base) / var(--bb-lh-body) var(--bb-font);
+    /* break-word (not anywhere) so long names wrap without squashing short words. */
+    overflow-wrap: break-word;
+  }
+
+  h1, h2, h3 { line-height: var(--bb-lh-tight); font-weight: var(--bb-fw-display); }
+
+  a { color: inherit; text-decoration-thickness: 2px; text-underline-offset: 0.2em; }
+  a:hover { text-decoration-color: var(--bb-accent); }
+
+  ::placeholder { color: var(--bb-ink-muted); opacity: 1; }
+
+  /* The one focus ring (design.md section 4): an ink band hugging the element and a
+     white band outside it. One of the two always has >= 3:1 against what is behind.
+     Components with a brick "lip" re-compose this ring into their own box-shadow. */
+  :focus-visible {
+    outline: var(--bb-focus-outer-w) solid var(--bb-focus-outer);
+    outline-offset: var(--bb-focus-inner-w);
+    box-shadow: 0 0 0 var(--bb-focus-inner-w) var(--bb-focus-inner);
+  }
+
+  @media (forced-colors: active) {
+    :focus-visible { outline: 3px solid Highlight; box-shadow: none; }
+  }
+
+  /* Scrolling dialogs lock the page behind them. */
+  html:has(dialog[open]) { overflow: hidden; }
+}
+
+
+/* ============================================================================
+   4  LAYOUT
+   >= 1024px : two columns. Blocks on the left, stage column on the right.
+   < 1024px  : one column, page scrolls: lesson, stage, then blocks.
+   < 700px   : phone notice, two-row top bar, compact category rail.
+   Every flex/grid child that holds text has min-inline-size: 0 so long words and
+   translated labels can never push the page sideways.
+   ============================================================================ */
+@layer layout {
+  :root {
+    --bb-gutter: var(--bb-space-3);
+    --bb-panel-pad: var(--bb-space-3);
+    --bb-stage-col: 26rem;
+    --bb-shell-max: 120rem;   /* 1920px: wider screens show ground colour on the sides */
+  }
+  @media (min-width: 43.75rem) {
+    :root { --bb-gutter: var(--bb-space-4); --bb-panel-pad: var(--bb-space-4); }
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar {
+    position: relative;                 /* so z-index applies and the File menu sits above Blockly */
+    z-index: var(--bb-z-topbar);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: var(--bb-space-3);
+    row-gap: var(--bb-space-2);
+    min-block-size: var(--bb-topbar-h);
+    padding-block: var(--bb-space-2);
+    /* Content stays inside the 1920px shell while the bar's background runs edge to edge. */
+    padding-inline: max(var(--bb-gutter), calc((100% - var(--bb-shell-max)) / 2 + var(--bb-gutter)));
+    background: var(--bb-surface);
+    border-block-end: var(--bb-edge-w) solid var(--bb-edge);
+  }
+  .topbar__project { flex: 1 1 10rem; min-inline-size: 0; max-inline-size: 28rem; }
+  .topbar__actions {
+    margin-inline-start: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--bb-space-1) var(--bb-space-2);
+    min-inline-size: 0;
+  }
+
+  /* ---------- the app grid ---------- */
+  .app {
+    position: relative;                 /* anchors the boot skeleton overlay */
+    flex: 1 0 auto;
+    inline-size: 100%;
+    max-inline-size: var(--bb-shell-max);
+    margin-inline: auto;
+    padding: var(--bb-gutter);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--bb-gutter);
+    align-content: start;
+    min-inline-size: 0;
+  }
+  /* One column: the lesson first (it is the instruction), then stage, then blocks. */
+  .lesson-panel   { order: 1; }
+  .panel--stage   { order: 2; }
+  .panel--workspace { order: 3; }
+
+  .panel { min-inline-size: 0; }
+  .panel--workspace { min-block-size: max(30rem, 70vh); min-block-size: max(30rem, 70dvh); }
+
+  /* ---------- >= 1024px: two columns ---------- */
+  @media (min-width: 64rem) {
+    :root { --bb-stage-col: clamp(21rem, 34vw, 26rem); }   /* 1024 to 1279 */
+
+    .app {
+      grid-template-columns: minmax(0, 1fr) var(--bb-stage-col);
+      grid-template-areas: "ws stage" "lesson stage";
+      grid-template-rows: minmax(0, 1fr);       /* the lesson row is auto: it only exists when shown */
+      row-gap: 0;                                /* the dock brings its own top margin */
+      align-content: stretch;
+    }
+    .panel--workspace { grid-area: ws; order: 0; min-block-size: 26rem; }
+    .panel--stage { grid-area: stage; order: 0; }
+    .lesson-panel { grid-area: lesson; order: 0; margin-block-start: var(--bb-gutter); }
+  }
+  @media (min-width: 80rem) {
+    :root { --bb-stage-col: clamp(26rem, 32vw, 35rem); }   /* 1280 and up; 35rem cap from 1536 */
+  }
+
+  /* App fills exactly one screen when there is room; the stage column then scrolls on its own. */
+  @media (min-width: 64rem) and (min-height: 36rem) {
+    body { block-size: 100vh; block-size: 100dvh; }
+    .app { flex: 1 1 0; min-block-size: 0; }
+    .panel--workspace { min-block-size: 0; }
+    .panel--stage { min-block-size: 0; overflow-y: auto; scrollbar-gutter: stable; }
+    /* The dock's own max-block-size lives with the dock rules below (a rule here would lose to them). */
+  }
+
+  /* ---------- stage panel: single-column arrangement (default) ----------
+     Declared BEFORE the 840 to 1023px grid below on purpose: both are one layer at equal specificity, so the
+     later rule wins, and the grid used to sit above this block and silently lose to display: flex. */
+  .panel--stage {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bb-space-3);
+    padding: var(--bb-panel-pad);
+    container: stage / inline-size;     /* children adapt to the panel, not the window */
+  }
+  .stage-toolbar, .stage-frame { inline-size: 100%; max-inline-size: 34rem; margin-inline: auto; }
+
+  /* ---------- 840 to 1023px: stage has room for the sprite panels beside the picture ---------- */
+  @media (52.5rem <= width < 64rem) {   /* range syntax: no 1px gap at fractional widths between this and the 64rem query */
+    .panel--stage {
+      display: grid;
+      grid-template-columns: minmax(0, 26rem) minmax(0, 1fr);
+      grid-template-areas: "bar info" "frame info" "frame sprites";
+      grid-template-rows: auto auto 1fr;
+      column-gap: var(--bb-space-4);
+      row-gap: var(--bb-space-3);
+      align-items: start;
+    }
+    .stage-toolbar { grid-area: bar; }
+    .stage-frame   { grid-area: frame; }
+    .sprite-info   { grid-area: info; }
+    .sprite-panel  { grid-area: sprites; }
+    .stage-toolbar, .stage-frame { max-inline-size: none; margin-inline: 0; }
+  }
+
+  /* ---------- < 700px: phone ---------- */
+  @media (width < 43.75rem) {
+    .topbar__project { order: 3; flex-basis: 100%; max-inline-size: none; }
+    .topbar__actions { flex: 1 1 auto; }
+    .phone-notice { order: 1; }          /* between the top bar (0) and the app (2) */
+    .app { order: 2; }
+  }
+  .topbar { order: 0; }
+  .app { order: 2; }
+
+  /* ---------- lesson dock: Bolt + title/goal, then steps, hint, buttons ----------
+     Every child is placed by a NAMED AREA, so a wrong column count can never push a child into an
+     implicit extra column (that was the old overlap bug). Why media queries and not @container: an element
+     cannot query itself, and the dock is its own container, so the old container query only ever matched
+     the children, never the grid. Why overflow: the dock keeps a sane height and scrolls inside itself,
+     so the blocks workspace always keeps most of the screen.
+     Narrow (default): Bolt beside title+goal, everything else full width, one column.
+     Wide (stacked 700 to 1023px, or docked from 1200px): steps and hint sit side by side. */
+  .lesson-panel {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "bolt    title"
+      "bolt    goal"
+      "steps-h steps-h"
+      "steps   steps"
+      "hint-h  hint-h"
+      "hint    hint"
+      "nav     nav"
+      "status  status";
+    column-gap: var(--bb-space-4);
+    row-gap: var(--bb-space-2);
+    align-items: start;
+    align-content: start;
+    min-inline-size: 0;
+    padding: var(--bb-space-4);
+    background: var(--bb-panel);
+    border: var(--bb-edge-w) solid var(--bb-edge);
+    border-radius: var(--bb-r-lg);
+    box-shadow: var(--bb-shadow-3);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-color: var(--bb-scroll) transparent;
+    /* Stacked layouts scroll the page too, so the dock may be taller there than a docked strip. */
+    max-block-size: max(45vh, 16rem);
+    max-block-size: max(45dvh, 16rem);
+  }
+  .lesson-panel > .bolt { grid-area: bolt; inline-size: 3.5rem; }
+  .lesson-panel > h2 { grid-area: title; }
+  .lesson-panel > .lesson-panel__goal { grid-area: goal; }
+  .lesson-panel > .lesson-panel__goal + .lesson-panel__sub { grid-area: steps-h; }
+  .lesson-panel > .lesson-steps { grid-area: steps; }
+  .lesson-panel > .lesson-steps + .lesson-panel__sub { grid-area: hint-h; }
+  .lesson-panel > .lesson-hint { grid-area: hint; }
+  .lesson-panel > .lesson-panel__nav { grid-area: nav; }
+  .lesson-panel > .lesson-panel__status { grid-area: status; }
+  .lesson-panel > * { min-inline-size: 0; }
+
+  /* The side-by-side arrangement now serves every width from 700 up (it used to skip 1024 to 1199px): the docked
+     strip needs exactly ONE flexible row (steps + hint) so the buttons can stay pinned; stacked steps and hint
+     would be two flexible rows that share the leftover height unevenly. */
+  @media (width >= 43.75rem) {
+    .lesson-panel {
+      grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-areas:
+        "bolt title   title"
+        "bolt goal    goal"
+        "bolt steps-h hint-h"
+        "bolt steps   hint"
+        "bolt nav     nav"
+        "bolt status  status";
+    }
+    .lesson-panel > .bolt { inline-size: 5rem; }
+  }
+
+  /* Docked under the blocks (two columns): a strip, never more than ~40% of the screen. Declared after
+     the base rule so it wins; the dock then scrolls inside itself. */
+  @media (min-width: 64rem) and (min-height: 36rem) {
+    /* One source for the dock cap: the toast offset in the components layer reads it too, so they cannot drift. */
+    :root { --bb-lesson-dock-h: 40vh; }
+    @supports (block-size: 1dvh) { :root { --bb-lesson-dock-h: 40dvh; } }
+    .lesson-panel {
+      max-block-size: var(--bb-lesson-dock-h);
+      /* Row 4 (steps | hint) is the only flexible row. Under the max-block-size cap it takes whatever the title,
+         headings, buttons and status leave, and steps/hint scroll inside it (rules in the components layer), so
+         Previous/Next hint, Start again and Close are always on screen. Sticky cannot do this: a grid item's
+         containing block is its own grid area. The dock keeps overflow-y: auto as a last-resort safety net. */
+      grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
+    }
+  }
+
+  /* Short docked windows (1024x768, 1280x720, 1366x768): the 40% cap leaves only ~200px, and the full-height
+     arrangement above spent nearly all of it on Bolt's column, a two-to-three-line goal and the row gaps, leaving
+     the steps and hint ~25px each. Raising the cap would take the height from the blocks workspace, so spend
+     fewer rows instead: Bolt's avatar goes (decorative, aria-hidden), title and a clamped goal share one row, and
+     the gaps and padding tighten. Six equal tracks let the header split 2:4 while steps and hint split 3:3.
+     Fixed rows now total ~165px, so the steps/hint row keeps >= ~100px at the smallest of these viewports. */
+  @media (min-width: 64rem) and (min-height: 36rem) and (max-height: 50rem) {
+    .lesson-panel {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      grid-template-areas:
+        "title   title   goal   goal   goal   goal"
+        "steps-h steps-h steps-h hint-h hint-h hint-h"
+        "steps   steps   steps   hint   hint   hint"
+        "nav     nav     nav     nav    nav    nav"
+        "status  status  status  status status status";
+      grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+      column-gap: var(--bb-space-3);
+      row-gap: var(--bb-space-1);
+      padding-block: var(--bb-space-3);
+    }
+    .lesson-panel > .bolt { display: none; }
+    .lesson-panel > .lesson-panel__goal { align-self: end; }
+  }
+}
+
+
+/* ============================================================================
+   5  COMPONENTS
+   ============================================================================ */
+@layer components {
+
+  /* ---------- icons and mascot ---------- */
+  .icon { inline-size: var(--bb-icon); block-size: var(--bb-icon); flex: none; }
+  .icon--up { transform: rotate(180deg); }          /* the dpad "up" key reuses the chevron-down symbol */
+  /* Chevrons that mean "back/next" mirror in Arabic. GRANITE has not added .icon--dir to the
+     lesson hint buttons yet, so they are named here too. The dpad arrows are physical: never mirrored. */
+  [dir="rtl"] .icon--dir,
+  [dir="rtl"] #btn-hint-prev .icon,
+  [dir="rtl"] #btn-hint-next .icon,
+  [dir="rtl"] #btn-lesson-next .icon { transform: scaleX(-1); }
+
+  /* Toggle icon pairs: show the one that matches aria-pressed. */
+  .icon-swap { display: inline-flex; }
+  .icon-swap--on { display: none; }
+  [aria-pressed="true"] > .icon-swap--on { display: inline-flex; }
+  [aria-pressed="true"] > .icon-swap--off { display: none; }
+
+  .bolt { flex: none; max-inline-size: 100%; block-size: auto; aspect-ratio: 1; }
+
+  /* ---------- buttons: a coloured slab with an ink edge and a collapsing "lip" ---------- */
+  .btn {
+    --_lip: var(--bb-shadow-2);
+    --_bg: var(--bb-surface);
+    --_fg: var(--bb-ink);
+    --_edge: var(--bb-edge);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--bb-space-2);
+    min-block-size: var(--bb-hit);
+    min-inline-size: var(--bb-hit);
+    padding: var(--bb-space-2) var(--bb-space-4);
+    background: var(--_bg);
+    color: var(--_fg);
+    border: var(--bb-edge-w) solid var(--_edge);
+    border-radius: var(--bb-r-pill);
+    font: var(--bb-fw-ui) var(--bb-text-base) / 1.2 var(--bb-font);
+    text-align: center;
+    box-shadow: var(--_ring, 0 0 #0000), var(--_lip);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* The lip shadow must survive keyboard focus, so the ring is composed into box-shadow. */
+  :where(.btn, .field-input, .sprite-item, .char-card, .lesson-card):focus-visible {
+    --_ring: 0 0 0 var(--bb-focus-inner-w) var(--bb-focus-inner);
+  }
+
+  .btn--primary   { --_bg: var(--bb-accent); --_fg: var(--bb-accent-ink); }
+  .btn--secondary { --_bg: var(--bb-surface); }
+  .btn--danger    { --_bg: var(--bb-danger); --_fg: var(--bb-danger-ink); }
+  .btn--ghost     { --_bg: transparent; --_edge: transparent; --_lip: 0 0 #0000; --_dy: 0px; }
+  .btn--round     { padding: 0; inline-size: var(--bb-hit); }
+
+  @media (hover: hover) {
+    .btn--primary:hover { --_bg: var(--bb-accent-hover); }
+    .btn--secondary:hover { --_bg: var(--bb-panel); }
+    .btn--ghost:hover { --_bg: var(--bb-panel); --_edge: var(--bb-line-strong); }
+    .btn--danger:hover { filter: brightness(1.08); }
+  }
+
+  /* Pressed (momentary) and toggled-on both collapse the lip: the slab sits down. Not colour-only. */
+  .btn:is(:active, [aria-pressed="true"]) {
+    transform: translateY(var(--_dy, var(--bb-lip)));
+    --_lip: var(--bb-shadow-pressed);
+  }
+  .btn[aria-pressed="true"] { --_bg: var(--bb-inverse-bg); --_fg: var(--bb-inverse-ink); }
+
+  .btn:is(:disabled, [aria-disabled="true"]) {
+    --_bg: var(--bb-panel); --_fg: var(--bb-ink-muted); --_edge: var(--bb-line-strong);
+    --_lip: 0 0 #0000; --_dy: 0px;
+    cursor: not-allowed;
+  }
+
+  /* ---------- text fields ---------- */
+  .field-input {
+    --_lip: var(--bb-shadow-1);
+    display: block;
+    inline-size: 100%;
+    min-inline-size: 0;
+    min-block-size: var(--bb-hit);
+    padding: var(--bb-space-2) var(--bb-space-3);
+    background: var(--bb-input-bg);
+    color: var(--bb-ink);
+    border: var(--bb-edge-w-thin) solid var(--bb-line-strong);
+    border-radius: var(--bb-r-md);
+    box-shadow: var(--_ring, 0 0 #0000), var(--_lip);
+    font-weight: var(--bb-fw-ui);
+  }
+  /* Numbers keep Western digits and a left-anchored minus even in Arabic. */
+  .field-input[type="number"] { direction: ltr; text-align: start; font-variant-numeric: tabular-nums; }
+  /* Names can mix scripts; let each value pick its own direction. */
+  .field-input[type="text"] { unicode-bidi: plaintext; }
+  .field-input[aria-invalid="true"] { border-color: var(--bb-danger); }
+  .field-input:user-invalid { border-color: var(--bb-danger); }
+  .field-input--project { font-weight: var(--bb-fw-display); }
+
+  .field { display: grid; gap: var(--bb-space-1); align-content: start; min-inline-size: 0; }
+  .field__label { font-size: var(--bb-text-xs); font-weight: var(--bb-fw-display); line-height: 1.2; }
+  /* role="alert" must stay rendered when empty or screen readers can miss the first message. */
+  .field-error { color: var(--bb-danger); font-weight: var(--bb-fw-display); font-size: var(--bb-text-sm); }
+  .field-error:not(:empty) { margin-block-start: var(--bb-space-2); }
+
+  /* ---------- skip links ---------- */
+  .skip-link {
+    position: fixed;
+    inset-block-start: var(--bb-space-2);
+    inset-inline-start: var(--bb-space-2);
+    z-index: 100;
+    padding: var(--bb-space-3) var(--bb-space-4);
+    background: var(--bb-accent);
+    color: var(--bb-accent-ink);
+    border: var(--bb-edge-w) solid var(--bb-focus-inner);
+    border-radius: var(--bb-r-pill);
+    font-weight: var(--bb-fw-display);
+    text-decoration: none;
+    transform: translateY(-200%);       /* off-screen until focused; stays in the tab order */
+  }
+  .skip-link:focus { transform: none; }
+
+  /* ---------- top bar bits ---------- */
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--bb-space-2);
+    min-block-size: var(--bb-hit);
+    color: var(--bb-ink);
+    text-decoration: none;
+    border-radius: var(--bb-r-pill);
+  }
+  .logo__mark { inline-size: 2.25rem; block-size: 2.25rem; flex: none; }
+  .wordmark { font-size: var(--bb-text-lg); font-weight: var(--bb-fw-display); line-height: 1; }
+  .topbar .btn { font-size: var(--bb-text-sm); }
+
+  /* File menu: a small popover under its button. The actions sit at the inline-END of the bar, so the list
+     hangs from the button's inline-END edge and grows toward the middle of the page in both directions
+     (it was start-anchored, which grew toward the page edge and could be clipped at 700 to ~900px). */
+  .menu { position: relative; }
+  .menu__list {
+    position: absolute;
+    inset-block-start: calc(100% + var(--bb-space-2));
+    inset-inline-end: 0;
+    z-index: var(--bb-z-menu);
+    min-inline-size: min(15rem, calc(100vw - 1.5rem));
+    max-inline-size: calc(100vw - 1.5rem);
+    margin: 0;
+    padding: 0.375rem;
+    background: var(--bb-surface);
+    color: var(--bb-ink);
+    border: var(--bb-edge-w) solid var(--bb-edge);
+    border-radius: var(--bb-r-md);
+    box-shadow: var(--bb-shadow-3);
+  }
+  .menu__item {
+    display: flex;
+    align-items: center;
+    gap: var(--bb-space-3);
+    inline-size: 100%;
+    min-block-size: var(--bb-hit);
+    padding-inline: var(--bb-space-3);
+    border-inline-start: 4px solid transparent;
+    border-radius: var(--bb-r-sm);
+    color: var(--bb-ink);
+    font-size: var(--bb-text-sm);
+    font-weight: var(--bb-fw-ui);
+    text-align: start;
+  }
+  .menu__item:hover, .menu__item:focus-visible { background: var(--bb-panel); border-inline-start-color: var(--bb-accent); }
+  /* Phones: the File button can sit anywhere along a wrapped row, so a popover hung from it could run
+     off the screen. Hang the list from the whole top bar instead: a full-width sheet under it. */
+  @media (width < 43.75rem) {
+    .menu { position: static; }
+    .menu__list {
+      inset-inline: var(--bb-space-3);
+      inset-block-start: calc(100% + var(--bb-edge-w) + var(--bb-space-1));
+      min-inline-size: 0;
+      max-inline-size: none;
+    }
+  }
+
+  /* ---------- panels ---------- */
+  .panel {
+    background: var(--bb-panel);
+    border: var(--bb-edge-w) solid var(--bb-edge);
+    border-radius: var(--bb-r-lg);
+    box-shadow: var(--bb-shadow-3);
+    scrollbar-color: var(--bb-scroll) transparent;
+  }
+
+  /* ---------- stage ---------- */
+  .stage-toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--bb-space-1);
+    padding: var(--bb-space-2) var(--bb-space-2) calc(var(--bb-space-2) + var(--bb-lip));   /* room for the lip of pressed buttons */
+    background: var(--bb-surface);
+    border: var(--bb-edge-w) solid var(--bb-edge);
+    border-radius: var(--bb-r-pill);
+    box-shadow: var(--bb-shadow-2);
+  }
+  #btn-speed { margin-inline-start: auto; }          /* flag, pause, stop at the start; speed and pad at the end */
+  /* Stop is a surface button with a red edge: the icon's own red fill would vanish on a red slab. */
+  .stage-toolbar .btn--danger { --_bg: var(--bb-surface); --_fg: var(--bb-ink); --_edge: var(--bb-danger); }
+  @container stage (min-width: 22rem) {
+    .stage-toolbar { gap: var(--bb-space-2); padding-inline: var(--bb-space-3); }
+    .stage-toolbar .btn--round { inline-size: 3rem; min-block-size: 3rem; }
+  }
+
+  .stage-frame {
+    position: relative;
+    container: frame / inline-size;
+    /* overflow:hidden makes the frame's automatic min-height 0, so as a flex item of the stage column it used to
+       shrink and crop the 4:3 canvas. It must keep its content height; the column scrolls instead. */
+    flex: none;
+    overflow: hidden;
+    background: var(--bb-stage-bg);
+    border: 4px solid var(--bb-stage-frame);
+    border-radius: var(--bb-r-lg);
+  }
+  /* The canvas carries the 4:3 ratio itself (480x360 attributes + aspect-ratio), so the
+     frame never needs a height and nothing shifts while the page loads. */
+  .stage { inline-size: 100%; block-size: auto; aspect-ratio: 4 / 3; background: var(--bb-stage-bg); touch-action: none; }
+  /* The stage is white in both themes, so an inset ink ring is always >= 14:1. */
+  .stage:focus-visible { outline: 4px solid var(--bb-focus-inner); outline-offset: -8px; box-shadow: none; }
+
+  /* A running program is shown by shape, not colour alone: a double ring around the frame. */
+  body.is-running .stage-frame {
+    box-shadow: 0 0 0 4px var(--bb-accent), 0 0 0 7px var(--bb-edge);
+  }
+  /* Paused: the ring turns into a dashed outline. */
+  body.is-paused .stage-frame {
+    box-shadow: none;
+    outline: 4px dashed var(--bb-edge);
+    outline-offset: 3px;
+  }
+
+  .ask-form {
+    position: absolute;
+    inset-inline: var(--bb-space-2);
+    inset-block-end: var(--bb-space-2);
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--bb-space-2);
+    padding: var(--bb-space-2);
+    background: var(--bb-surface);
+    border: var(--bb-edge-w) solid var(--bb-edge);
+    border-radius: var(--bb-r-md);
+  }
+  .ask-form__label { flex: 1 1 100%; font-weight: var(--bb-fw-display); font-size: var(--bb-text-sm); }
+  .ask-form .field-input { flex: 1 1 8rem; inline-size: auto; }
+
+  /* Arrow pad: always laid out as physical left/right, even in Arabic (direction: ltr). */
+  .dpad {
+    --_key: clamp(2.75rem, 14cqi, 3.5rem);
+    position: absolute;
+    inset-block-end: var(--bb-space-2);
+    inset-inline-end: var(--bb-space-2);
+    z-index: 1;
+    direction: ltr;
+    display: grid;
+    grid-template-columns: repeat(3, var(--_key));
+    grid-template-areas: ". up ." "left down right" "space space space";
+    gap: var(--bb-space-1);
+    padding-block-end: var(--bb-lip);
+  }
+  .dpad__key { inline-size: var(--_key); min-block-size: var(--_key); }
+  .dpad__key--up    { grid-area: up; }
+  .dpad__key--left  { grid-area: left; }
+  .dpad__key--down  { grid-area: down; }
+  .dpad__key--right { grid-area: right; }
+  .dpad__key--space { grid-area: space; inline-size: auto; min-block-size: var(--bb-hit); }
+  .dpad__key.is-down { --_lip: var(--bb-shadow-pressed); transform: translateY(var(--bb-lip)); --_bg: var(--bb-inverse-bg); --_fg: var(--bb-inverse-ink); }
+
+  /* ---------- sprite settings ---------- */
+  .sprite-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+    gap: var(--bb-space-3);
+    align-items: end;
+  }
+  .sprite-info .field--name { grid-column: 1 / -1; }
+  .sprite-info > .btn { grid-column: span 2; justify-self: start; }
+
+  /* ---------- sprite list ---------- */
+  .sprite-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "title add" "list list";
+    align-items: center;
+    gap: var(--bb-space-3);
+  }
+  .sprite-panel__title { grid-area: title; font-size: var(--bb-text-md); }
+  #btn-add-sprite { grid-area: add; }
+  .sprite-list {
+    grid-area: list;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(4.75rem, 1fr));
+    gap: var(--bb-space-4) var(--bb-space-3);
+    padding-block-start: var(--bb-space-2);        /* room for the delete chip that overhangs the tile */
+    min-inline-size: 0;
+    /* Reserve one row (tile + the padding above) so boot filling the empty <ul> moves nothing: QUARTZ measured
+       CLS 0.0154 from exactly this. border-box, so the padding is part of the number. */
+    --bb-sprite-row: 5.5rem;
+    min-block-size: calc(var(--bb-sprite-row) + var(--bb-space-2));
+    align-content: start;
+  }
+  .sprite-row { position: relative; min-inline-size: 0; }
+  .sprite-item {
+    --_lip: var(--bb-shadow-1);
+    position: relative;
+    display: grid;
+    justify-items: center;
+    align-content: start;
+    gap: var(--bb-space-1);
+    inline-size: 100%;
+    min-block-size: var(--bb-sprite-row, 5.5rem);
+    padding: var(--bb-space-2) var(--bb-space-1) var(--bb-space-3);
+    background: var(--bb-surface);
+    color: var(--bb-ink);
+    border: var(--bb-edge-w-thin) solid var(--bb-line-strong);
+    border-radius: var(--bb-r-md);
+    box-shadow: var(--_ring, 0 0 #0000), var(--_lip);
+  }
+  .sprite-thumb {
+    inline-size: 3rem; block-size: 3rem;
+    object-fit: contain;
+    background: var(--bb-stage-bg);
+    border-radius: var(--bb-r-sm);
+  }
+  .sprite-label {
+    max-inline-size: 100%;
+    font-size: var(--bb-text-xs);
+    font-weight: var(--bb-fw-ui);
+    line-height: 1.2;
+    text-align: center;
+    overflow-wrap: anywhere;
+    unicode-bidi: plaintext;
+  }
+  /* Selected: three cues besides colour. A thicker edge, a lifted lip, an accent bar, bolder label. */
+  .sprite-item[aria-current="true"] {
+    --_lip: var(--bb-shadow-2);
+    border-color: var(--bb-edge);
+    box-shadow: var(--_ring, 0 0 #0000), 0 0 0 2px var(--bb-edge), var(--_lip);
+  }
+  .sprite-item[aria-current="true"] .sprite-label { font-weight: var(--bb-fw-display); }
+  .sprite-item[aria-current="true"]::after {
+    content: "";
+    position: absolute;
+    inset-inline: 25%;
+    inset-block-end: var(--bb-space-1);
+    block-size: 0.25rem;
+    background: var(--bb-accent);
+    border: 1px solid var(--bb-edge);
+    border-radius: var(--bb-r-pill);
+  }
+  @media (hover: hover) { .sprite-item:hover { border-color: var(--bb-edge); } }
+
+  .sprite-delete, .saved-delete {
+    min-inline-size: var(--bb-hit-min); min-block-size: var(--bb-hit-min);
+  }
+  .sprite-delete {
+    position: absolute;
+    inset-block-start: -0.5rem;
+    inset-inline-end: -0.375rem;
+    inline-size: 1.75rem; block-size: 1.75rem;
+    /* Grid + zero padding/line-height centres the glyph exactly, whatever the border or font does. */
+    display: grid; place-items: center;
+    padding: 0; line-height: 0;
+    --_bg: var(--bb-surface); --_edge: var(--bb-edge);
+    z-index: 1;
+  }
+  .sprite-delete .icon { inline-size: 1rem; block-size: 1rem; }
+  @media (hover: hover) { .sprite-delete:hover { --_bg: var(--bb-danger); --_fg: var(--bb-danger-ink); } }
+  /* With a single sprite there is nothing to delete: hide the chip instead of drawing a faint ring.
+     (Hover, focus and activation can no longer reach it, so the "last sprite" toast is a safety net only.) */
+  .sprite-delete[aria-disabled="true"] { display: none; }
+
+  /* ---------- lesson dock content ---------- */
+  .lesson-panel__title { font-size: var(--bb-text-lg); align-self: end; }
+  /* startLesson() moves focus here programmatically. The global ring is drawn on the element's own box, which is
+     square for a bare heading; round it and give the ring a little air. The padding is cancelled by the margin so
+     the text does not move, and stays well inside the dock's padding so the ring is never clipped. */
+  .lesson-panel__title:focus-visible {
+    border-radius: var(--bb-r-sm);
+  }
+  .lesson-panel > .lesson-panel__title {
+    padding-inline: var(--bb-space-1);
+    margin-inline: calc(-1 * var(--bb-space-1));
+  }
+  .lesson-panel__goal { font-size: var(--bb-text-md); font-weight: var(--bb-fw-ui); }
+  .lesson-panel__sub { font-size: var(--bb-text-sm); color: var(--bb-ink-muted); }
+
+  .lesson-steps { display: grid; gap: var(--bb-space-2); counter-reset: step; }
+  .lesson-step {
+    position: relative;
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+    column-gap: var(--bb-space-2);
+    align-items: start;
+    min-block-size: 1.75rem;
+    padding-block-start: 0.125rem;
+  }
+  .lesson-step::before {
+    content: counter(step);
+    display: grid;
+    place-items: center;
+    inline-size: 1.75rem; block-size: 1.75rem;
+    margin-block-start: -0.125rem;
+    background: var(--bb-surface);
+    border: var(--bb-edge-w-thin) solid var(--bb-line-strong);
+    border-radius: 50%;
+    font-size: var(--bb-text-xs);
+    font-weight: var(--bb-fw-display);
+  }
+  .lesson-step[aria-current="step"] { font-weight: var(--bb-fw-display); }
+  .lesson-step[aria-current="step"]::before { background: var(--bb-accent); color: var(--bb-accent-ink); border-color: var(--bb-edge); }
+  /* Done: a filled chip with a drawn tick (a shape, not just green). */
+  .lesson-step[data-done]::before { content: ""; background: var(--bb-success); border-color: var(--bb-success); }
+  .lesson-step[data-done]::after {
+    content: "";
+    position: absolute;
+    /* The chip is 28px and sits at the li's top edge, so its centre is (14px, 14px). The tick box is 7x13
+       (border-box) and its centre is placed there, 1px high because a check's weight sits low. */
+    inset-inline-start: 0.65625rem;
+    inset-block-start: 0.40625rem;
+    inline-size: 0.4375rem; block-size: 0.8125rem;
+    border: solid var(--bb-success-ink);
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg);
+  }
+
+  /* Bolt's hint: a speech bubble whose tail points up toward Bolt and flips with the language direction. */
+  .lesson-hint {
+    position: relative;
+    margin-block-start: var(--bb-space-2);          /* the tail pokes ~12px above the bubble; keep it off the heading */
+    padding: var(--bb-space-3) var(--bb-space-4);
+    background: var(--bb-surface);
+    border: var(--bb-edge-w) solid var(--bb-edge);
+    border-radius: var(--bb-r-lg);
+    font-weight: var(--bb-fw-ui);
+    overflow-wrap: anywhere;
+  }
+  .lesson-hint::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 1.25rem;
+    inset-block-start: -0.6rem;
+    inline-size: 0.9rem; block-size: 0.9rem;
+    background: var(--bb-surface);
+    border: solid var(--bb-edge);
+    border-width: var(--bb-edge-w) 0 0 var(--bb-edge-w);
+    transform: rotate(45deg);
+  }
+  .lesson-hint:empty { padding: 0; border-width: 0; }
+  .lesson-hint:empty::before { display: none; }
+
+  .lesson-panel__nav { display: flex; flex-wrap: wrap; align-items: center; gap: var(--bb-space-2); }
+  #btn-lesson-close { margin-inline-start: auto; }
+  .lesson-panel__status { min-block-size: 1.5em; color: var(--bb-ink-muted); font-weight: var(--bb-fw-ui); }
+
+  /* Docked dock (see the layout layer): steps and hint scroll in the flexible row; the buttons never do.
+     max-block-size: 100% resolves against the grid area, so each keeps its natural height (and start alignment)
+     until the row runs out. These live here, not in layout, because components outranks layout for .lesson-hint. */
+  @media (min-width: 64rem) and (min-height: 36rem) {
+    .lesson-panel > .lesson-steps,
+    .lesson-panel > .lesson-hint {
+      align-self: start;
+      min-block-size: 0;
+      max-block-size: 100%;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-color: var(--bb-scroll) transparent;
+    }
+    /* The bubble's tail pokes out of the top edge and a scroller would clip it; the heading above already labels it. */
+    .lesson-panel > .lesson-hint::before { display: none; }
+    .lesson-panel > .lesson-hint { margin-block-start: 0; }
+  }
+
+  /* Short docked windows (layout layer has the matching grid): the goal shares a row with the title, so it is
+     clamped to two lines. The full goal is not lost: it is the lesson card's text in the lessons dialog. */
+  @media (min-width: 64rem) and (min-height: 36rem) and (max-height: 50rem) {
+    .lesson-panel > .lesson-panel__goal {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      overflow: hidden;
+      line-height: var(--bb-lh-tight);
+      /* overflow: hidden clips at the padding box, and a 1.2 line box is shorter than Latin descenders need. */
+      padding-block: 0.1em;
+      overflow-wrap: anywhere;
+    }
+    /* Cairo's glyph box is ~1.6em (33px at 20.8px); the shared Arabic tight leading (1.35) clipped it. Two lines
+       are ~66px, ~10px more than before: inside the ~13px the steps/hint row can give up while staying >= 70px.
+       The line box is already roomy, so no extra padding. If this ever overflows, drop the clamp to 1 here. */
+    :lang(ar) .lesson-panel > .lesson-panel__goal {
+      line-height: 1.6;
+      padding-block: 0.2em;
+    }
+    .lesson-panel > .lesson-panel__title { overflow-wrap: anywhere; }
+  }
+
+  /* ---------- dialogs ---------- */
+  .dlg {
+    inline-size: min(92vw, 36rem);
+    max-block-size: 90vh;
+    max-block-size: 90dvh;
+    background: var(--bb-surface);
+    color: var(--bb-ink);
+    border: 4px solid var(--bb-edge);
+    border-radius: var(--bb-r-xl);
+    box-shadow: var(--bb-shadow-4);
+    overflow: hidden;
+  }
+  .dlg--small { inline-size: min(92vw, 26rem); }
+  .dlg[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+  .dlg > form { display: contents; }               /* prompt/confirm wrap everything in a form */
+  /* ::backdrop does not inherit custom properties in every browser; the literal is the light-theme scrim. */
+  .dlg::backdrop { background: var(--bb-scrim, rgb(27 27 58 / 0.55)); }
+
+  .dlg__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--bb-space-3);
+    padding: var(--bb-space-4) var(--bb-space-6) var(--bb-space-2);
+  }
+  .dlg__head:has(.dlg__close) { padding-inline-end: var(--bb-space-3); }
+  .dlg__title { min-inline-size: 0; font-size: var(--bb-text-lg); }
+  .dlg__body {
+    min-block-size: 0;
+    overflow-y: auto;
+    display: grid;
+    gap: var(--bb-space-3);
+    align-content: start;
+    padding: var(--bb-space-2) var(--bb-space-6) var(--bb-space-6);
+    scrollbar-color: var(--bb-scroll) transparent;
+  }
+  .dlg__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--bb-space-3);
+    padding: var(--bb-space-2) var(--bb-space-6) var(--bb-space-6);
+  }
+  .dlg__actions .btn { min-block-size: 3rem; }
+  /* DOM order is the focus order, so the primary button stays first in both directions. */
+  .dlg--welcome .dlg__actions { flex-direction: column; align-items: stretch; }
+  .dlg__body--welcome { justify-items: center; text-align: center; font-size: var(--bb-text-md); }
+  .dlg--welcome .bolt { inline-size: 7rem; }
+
+  /* ---------- dialog lists (all filled by JS) ---------- */
+  .lesson-list, .saved-list { display: grid; gap: var(--bb-space-3); }
+  .lesson-card {
+    --_lip: var(--bb-shadow-2);
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--bb-space-3);
+    inline-size: 100%;
+    min-block-size: 4rem;
+    padding: var(--bb-space-3) var(--bb-space-4);
+    background: var(--bb-surface);
+    color: var(--bb-ink);
+    text-align: start;
+    border: var(--bb-edge-w) solid var(--bb-edge);
+    border-radius: var(--bb-r-lg);
+    box-shadow: var(--_ring, 0 0 #0000), var(--_lip);
+  }
+  .lesson-card[data-done="true"] { border-color: var(--bb-success); }
+  .lesson-card__body { display: grid; gap: 0.125rem; min-inline-size: 0; }
+  .lesson-card__title { font-weight: var(--bb-fw-display); font-size: var(--bb-text-md); }
+  .lesson-card__goal { color: var(--bb-ink-muted); font-size: var(--bb-text-sm); font-weight: var(--bb-fw-ui); }
+  .lesson-num {
+    display: grid; place-items: center;
+    inline-size: 2.5rem; block-size: 2.5rem;
+    background: var(--bb-accent); color: var(--bb-accent-ink);
+    border: var(--bb-edge-w) solid var(--bb-edge);
+    border-radius: 50%;
+    font-weight: var(--bb-fw-display);
+  }
+  .lesson-badge {
+    display: inline-flex; align-items: center; gap: var(--bb-space-1);
+    padding: 0.25rem 0.625rem;
+    background: var(--bb-success); color: var(--bb-success-ink);
+    border-radius: var(--bb-r-pill);
+    font-size: var(--bb-text-xs); font-weight: var(--bb-fw-display);
+  }
+  .lesson-badge .icon { inline-size: 1.125rem; block-size: 1.125rem; }
+  @media (max-width: 30rem) { .lesson-badge { grid-column: 2; justify-self: start; } }
+  @media (hover: hover) { .lesson-card:hover, .char-card:hover { background: var(--bb-panel); } }
+
+  .char-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr)); gap: var(--bb-space-3); }
+  .char-card {
+    --_lip: var(--bb-shadow-2);
+    display: grid;
+    justify-items: center;
+    gap: var(--bb-space-2);
+    inline-size: 100%;
+    padding: var(--bb-space-3);
+    background: var(--bb-surface);
+    color: var(--bb-ink);
+    border: var(--bb-edge-w) solid var(--bb-edge);
+    border-radius: var(--bb-r-lg);
+    box-shadow: var(--_ring, 0 0 #0000), var(--_lip);
+    font-weight: var(--bb-fw-display);
+  }
+  .char-thumb { inline-size: 4rem; block-size: 4rem; object-fit: contain; background: var(--bb-stage-bg); border-radius: var(--bb-r-md); }
+  .char-name { overflow-wrap: anywhere; text-align: center; }
+
+  .saved-item { display: flex; align-items: center; gap: var(--bb-space-2); }
+  .saved-open {
+    flex: 1 1 auto; min-inline-size: 0;
+    display: grid; justify-items: start; gap: 0.125rem;
+    border-radius: var(--bb-r-lg);
+    text-align: start;
+  }
+  .saved-name { font-weight: var(--bb-fw-display); overflow-wrap: anywhere; unicode-bidi: plaintext; }
+  .saved-when { font-size: var(--bb-text-xs); font-weight: var(--bb-fw-ui); color: var(--bb-ink-muted); }
+  @media (hover: hover) { .saved-delete:hover { --_bg: var(--bb-danger); --_fg: var(--bb-danger-ink); } }
+
+  /* Empty state: Bolt (a local file, fetched only when the dialog is actually shown) and one friendly line. */
+  #saved-empty { text-align: center; font-weight: var(--bb-fw-ui); }
+  #saved-empty::before {
+    content: "";
+    display: block;
+    inline-size: 6rem; block-size: 6rem;
+    margin: 0 auto var(--bb-space-2);
+    background: url("../assets/bolt.svg") center / contain no-repeat;
+  }
+
+  /* ---------- toasts ---------- */
+  .toast-region {
+    position: fixed;
+    inset-inline: 0;
+    inset-block-end: max(var(--bb-space-4), env(safe-area-inset-bottom));
+    z-index: var(--bb-z-toast);
+    display: grid;
+    justify-items: center;
+    gap: var(--bb-space-2);
+    padding-inline: var(--bb-space-3);
+    pointer-events: none;                 /* the strip must never block the page underneath */
+  }
+  /* While the lesson dock is docked at the bottom, lift the strip clear of it: the dock is at most --bb-lesson-dock-h
+     tall (defined with the dock cap in the layout layer) and sits one gutter above the screen edge, so its buttons
+     (Close, hints) are never under a toast. */
+  @media (min-width: 64rem) and (min-height: 36rem) {
+    body:has(.lesson-panel:not([hidden])) .toast-region {
+      inset-block-end: calc(var(--bb-lesson-dock-h) + var(--bb-gutter) + var(--bb-space-3));
+    }
+  }
+  .toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--bb-space-3);
+    inline-size: min(100%, 28rem);
+    padding: var(--bb-space-3);
+    background: var(--bb-surface);
+    color: var(--bb-ink);
+    border: var(--bb-edge-w) solid var(--bb-edge);
+    border-radius: var(--bb-r-md);
+    box-shadow: var(--bb-shadow-4);
+    font-size: var(--bb-text-sm);
+    font-weight: var(--bb-fw-ui);
+    cursor: pointer;
+  }
+  .toast__text { flex: 1 1 auto; min-inline-size: 0; }
+  /* Icon chip: a glyph in a coloured disc. Decorative, so its alt text is empty. */
+  .toast::before {
+    content: "\2713"; content: "\2713" / "";
+    flex: none;
+    display: grid; place-items: center;
+    inline-size: 1.5rem; block-size: 1.5rem;
+    background: var(--bb-success); color: var(--bb-success-ink);
+    border-radius: 50%;
+    font-weight: var(--bb-fw-display); line-height: 1;
+  }
+  .toast--info { border-color: var(--bb-edge); }
+  .toast--info::before { content: "i"; content: "i" / ""; background: var(--bb-accent); color: var(--bb-accent-ink); border: 2px solid var(--bb-block-edge); }
+  /* The text stays ink (16:1); the red lives in the chip and the edge. */
+  .toast--error { border-color: var(--bb-danger); }
+  .toast--error::before { content: "!"; content: "!" / ""; background: var(--bb-danger); color: var(--bb-danger-ink); }
+
+  /* ---------- celebration ---------- */
+  /* The element is its own card; the scrim is a huge spread shadow, so no wrapper is needed and
+     clicks outside still reach the page (the card is polite, not a trap). */
+  .celebration {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    z-index: calc(var(--bb-z-toast) + 1);
+    inline-size: min(92vw, 30rem);
+    block-size: fit-content;
+    max-block-size: 90vh;
+    max-block-size: 90dvh;
+    display: grid;
+    justify-items: center;
+    gap: var(--bb-space-4);
+    padding: var(--bb-space-6);
+    text-align: center;
+    background: var(--bb-surface);
+    color: var(--bb-ink);
+    border: 4px solid var(--bb-edge);
+    border-radius: var(--bb-r-xl);
+    box-shadow: 0 0 0 100vmax var(--bb-scrim), var(--bb-shadow-4);
+  }
+  .celebration .bolt { inline-size: min(10rem, 40vw); }
+  .celebration__text { font-size: var(--bb-text-xl); font-weight: var(--bb-fw-display); line-height: var(--bb-lh-tight); text-wrap: balance; }
+  .celebration__all { font-size: var(--bb-text-md); font-weight: var(--bb-fw-display); }
+  .celebration__actions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--bb-space-3); }
+  .confetti-piece {
+    position: fixed;
+    inset-block-start: -1.5rem;
+    inset-inline-start: calc(var(--i, 0) * 2.8%);
+    inline-size: 0.625rem; block-size: 0.875rem;
+    background: var(--cat-events);
+    border: 2px solid var(--bb-block-edge);
+    border-radius: 2px;
+    pointer-events: none;
+    --_dx: -2rem;
+  }
+  .confetti-piece:nth-of-type(even) { --_dx: 2rem; }
+  .confetti-piece:nth-of-type(10n + 2)  { background: var(--cat-motion); }
+  .confetti-piece:nth-of-type(10n + 3)  { background: var(--cat-looks); }
+  .confetti-piece:nth-of-type(10n + 4)  { background: var(--cat-sound); }
+  .confetti-piece:nth-of-type(10n + 5)  { background: var(--cat-pen); }
+  .confetti-piece:nth-of-type(10n + 6)  { background: var(--cat-control); }
+  .confetti-piece:nth-of-type(10n + 7)  { background: var(--cat-sensing); }
+  .confetti-piece:nth-of-type(10n + 8)  { background: var(--cat-operators); }
+  .confetti-piece:nth-of-type(10n + 9)  { background: var(--cat-variables); }
+  .confetti-piece:nth-of-type(10n + 10) { background: var(--cat-myblocks); }
+
+  /* ---------- phone notice (shown only below 700px) ---------- */
+  .phone-notice { display: none; }
+  @media (width < 43.75rem) {
+    .phone-notice {
+      z-index: var(--bb-z-notice);
+      display: flex;
+      align-items: center;
+      gap: var(--bb-space-3);
+      padding: var(--bb-space-2) var(--bb-gutter);
+      background: var(--bb-accent);
+      color: var(--bb-accent-ink);
+      border-block-end: var(--bb-edge-w) solid var(--bb-focus-inner);
+      font-weight: var(--bb-fw-ui);
+      font-size: var(--bb-text-sm);
+    }
+    .phone-notice::before {
+      content: "";
+      flex: none;
+      inline-size: 2.5rem; block-size: 2.5rem;
+      background: url("../assets/bolt.svg") center / contain no-repeat;
+    }
+    .phone-notice p { flex: 1 1 auto; min-inline-size: 0; }
+    /* White on yellow in both themes (the notice is always yellow), via the focus-ring tokens so no raw hex. */
+    .phone-notice .btn { flex: none; --_edge: var(--bb-focus-inner); --_bg: var(--bb-focus-outer); --_fg: var(--bb-focus-inner); }
+  }
+
+  /* ---------- boot skeleton and no-JS message ---------- */
+  /* ADR 0007 d.1: the welcome paragraph below is the page's LCP candidate, so it must be the biggest text
+     paint on first load (more characters x larger size than the wordmark, the title or the phone notice).
+     The overlay is absolute over .app (inset 0 = the same box as the final app region), so it takes no space
+     in flow and hiding it on html.is-ready moves nothing (CLS). overflow: clip stops a tall skeleton on a
+     short viewport from stretching the page. Only logical properties and centred text: RTL needs nothing more. */
+  .app-boot {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: grid;
+    justify-items: center;
+    align-content: start;
+    gap: var(--bb-space-4);
+    padding-block: clamp(1rem, 8vh, 5rem);
+    padding-inline: var(--bb-gutter);
+    overflow: clip;
+    background: var(--bb-ground);
+    color: var(--bb-ink);
+    text-align: center;
+    font-size: var(--bb-text-lg);
+    font-weight: var(--bb-fw-display);
+  }
+  .app-boot > * { min-inline-size: 0; margin: 0; }
+  .app-boot .bolt { inline-size: clamp(5rem, 18vw, 7.5rem); }   /* svg keeps its width/height attrs as the fallback box */
+  .app-boot__title {
+    font-size: var(--bb-text-xl);
+    line-height: var(--bb-lh-tight);
+    overflow-wrap: anywhere;
+  }
+  .app-boot__text {
+    inline-size: min(100%, 36rem);                          /* readable measure, ~45 to 60 characters per line */
+    font-size: clamp(1.25rem, 1.05rem + 1vw, 1.875rem);     /* 20px at 320 up to 30px; larger than the title's box area by line count */
+    font-weight: var(--bb-fw-ui);
+    line-height: var(--bb-lh-body);
+    text-wrap: pretty;
+    overflow-wrap: anywhere;
+  }
+  .app-boot__status { font-size: var(--bb-text-sm); font-weight: var(--bb-fw-ui); color: var(--bb-ink-muted); }
+  /* Three category-coloured blocks, no spinner. Flat colour stops, not a decorative gradient. */
+  .app-boot::after {
+    content: "";
+    inline-size: 12rem; block-size: 1.75rem;
+    border: var(--bb-edge-w) solid var(--bb-block-edge);
+    border-radius: var(--bb-r-pill);
+    background:
+      linear-gradient(var(--cat-motion) 0 0) 0 0 / 34% 100% no-repeat,
+      linear-gradient(var(--cat-looks) 0 0) 50% 0 / 34% 100% no-repeat,
+      linear-gradient(var(--cat-events) 0 0) 100% 0 / 34% 100% no-repeat;
+  }
+  html.is-ready .app-boot, html:not(.js) .app-boot { display: none; }
+
+  .noscript {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    overflow-y: auto;
+    display: grid;
+    justify-items: center;
+    align-content: start;
+    gap: var(--bb-space-4);
+    padding: var(--bb-space-8) var(--bb-space-4);
+    background: var(--bb-ground);
+    text-align: center;
+  }
+  .noscript > * { max-inline-size: 40rem; }
+  .noscript section { padding-block-start: var(--bb-space-4); border-block-start: 3px dashed var(--bb-line-strong); }
+
+  /* ---------- forced colours: keep boundaries visible ---------- */
+  @media (forced-colors: active) {
+    .btn, .field-input, .panel, .dlg, .toast, .menu__list, .sprite-item { border-color: CanvasText; }
+    .btn[aria-pressed="true"] { background: Highlight; color: HighlightText; }
+  }
+}
+
+
+/* ============================================================================
+   6  BLOCKLY HOST: the box Blockly is injected into, plus our own zoom buttons
+   (Blockly's own DOM is restyled in section 9.)
+   ============================================================================ */
+@layer blockly {
+  .panel--workspace { position: relative; background: var(--bb-workspace); }
+
+  /* Blockly sizes itself to this element, so it must have a definite box. */
+  .blockly-host {
+    position: absolute;
+    inset: 0;
+    isolation: isolate;                 /* Blockly's own z-indexes (20..70) stay inside this box */
+    overflow: hidden;
+    border-radius: calc(var(--bb-r-lg) - var(--bb-edge-w));
+  }
+  /* The skip link focuses this element; draw the ring inside the clipped box. */
+  .blockly-host:focus-visible { outline: 4px solid var(--bb-ink); outline-offset: -8px; box-shadow: none; }
+
+  /* Vertical stack above Blockly's trashcan (47x60 + 20px margins) at the end side, so the
+     two never overlap and both follow the writing direction. */
+  .zoom-controls {
+    position: absolute;
+    inset-inline-end: var(--bb-space-5);
+    inset-block-end: 6.5rem;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: var(--bb-space-2);
+    padding-block-end: var(--bb-lip);
+  }
+  /* Short windows (a lesson dock open under the blocks): lay the three buttons out in a row so the
+     stack cannot run past the top of the workspace. */
+  @media (max-height: 45rem) {
+    .zoom-controls { flex-direction: row; }
+  }
+}
+
+
+/* ============================================================================
+   7  UTILITIES
+   ============================================================================ */
+@layer utilities {
+  .sr-only {
+    position: absolute;
+    inline-size: 1px; block-size: 1px;
+    margin: -1px; padding: 0; border: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  /* Hidden inline SVG symbol sheet. */
+  .sprite-sheet { position: absolute; inline-size: 0; block-size: 0; overflow: hidden; }
+
+  /* Small screens: keep the icons, hide the words that do not fit. The words stay in the
+     accessibility tree (same technique as .sr-only). The language button keeps its label
+     because a child who cannot read the current language needs to see the other one. */
+  @media (max-width: 56rem) {
+    #btn-file > span, #btn-lessons > span {
+      position: absolute; inline-size: 1px; block-size: 1px; margin: -1px; padding: 0;
+      overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+    }
+    #btn-file, #btn-lessons { padding-inline: var(--bb-space-2); }
+    #btn-file .icon:last-child { display: none; }       /* the chevron, once the label is gone */
+  }
+  @media (max-width: 30rem) {
+    /* Tighter top bar so logo + five buttons fit one row at 375px (it wraps cleanly below that). */
+    .topbar { column-gap: var(--bb-space-2); }
+    .topbar__actions { column-gap: var(--bb-space-1); }
+    #btn-lang { padding-inline: var(--bb-space-2); }
+    .wordmark {
+      position: absolute; inline-size: 1px; block-size: 1px; margin: -1px; padding: 0;
+      overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+    }
+  }
+}
+
+
+/* ============================================================================
+   8  MOTION
+   Chrome motion is feedback and state only, animates transform and opacity only,
+   and exists ONLY for people who have not asked for reduced motion.
+   ============================================================================ */
+@layer motion {
+  @media (prefers-reduced-motion: no-preference) {
+    .btn, .sprite-item, .char-card, .lesson-card, .menu__item {
+      transition:
+        transform var(--bb-dur-instant) var(--bb-ease-out),
+        background-color var(--bb-dur-fast) var(--bb-ease-out),
+        border-color var(--bb-dur-fast) var(--bb-ease-out);
+    }
+    @media (hover: hover) {
+      .btn:hover:not(:active):not([aria-pressed="true"]):not(.btn--ghost):not(:disabled):not([aria-disabled="true"]) {
+        transform: translateY(-1px);
+      }
+    }
+
+    /* dialogs: fade and settle (transform + opacity only); the backdrop only fades */
+    @keyframes bb-dlg-in { from { opacity: 0; transform: scale(0.96); } }
+    @keyframes bb-fade-in { from { opacity: 0; } }
+    .dlg[open] { animation: bb-dlg-in var(--bb-dur-base) var(--bb-ease-out); }
+    .dlg[open]::backdrop { animation: bb-fade-in var(--bb-dur-base) linear; }
+
+    /* toasts rise 8px with a small overshoot, and sink away when dismissed */
+    @keyframes bb-toast-in { from { opacity: 0; transform: translateY(0.5rem); } }
+    @keyframes bb-toast-out { to { opacity: 0; transform: translateY(0.5rem); } }
+    .toast { animation: bb-toast-in var(--bb-dur-base) var(--bb-ease-boing); }
+    .toast.is-leaving { animation: bb-toast-out var(--bb-dur-base) var(--bb-ease-out) forwards; }
+
+    /* celebration: card fades (never transforms, so confetti keeps the viewport as its frame),
+       Bolt pops, confetti falls once. JS creates no confetti when reduced motion is requested. */
+    @keyframes bb-pop { 0% { opacity: 0; transform: scale(0.6); } 60% { transform: scale(1.08); } 100% { opacity: 1; transform: none; } }
+    @keyframes bb-fall { to { transform: translate3d(var(--_dx), 105vh, 0) rotate(540deg); } }
+    .celebration:not([hidden]) { animation: bb-fade-in var(--bb-dur-base) linear; }
+    .celebration .bolt { animation: bb-pop var(--bb-dur-slow) var(--bb-ease-boing) both; }
+    .confetti-piece { animation: bb-fall var(--bb-dur-cheer) var(--bb-ease-in-out) calc(var(--i, 0) * 40ms) both; }
+
+    /* current lesson step: the number chip pops when the step changes */
+    @keyframes bb-chip { 0% { transform: scale(0.7); } 100% { transform: none; } }
+    .lesson-step[aria-current="step"]::before { animation: bb-chip var(--bb-dur-base) var(--bb-ease-boing); }
+
+    /* boot skeleton: a gentle breathing, cheap (opacity only) */
+    @keyframes bb-boot { from { opacity: 0.55; } to { opacity: 1; } }
+    .app-boot::after { animation: bb-boot var(--bb-dur-pulse) ease-in-out infinite alternate; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      --bb-dur-instant: 0.01ms; --bb-dur-fast: 0.01ms; --bb-dur-base: 0.01ms;
+      --bb-dur-slow: 0.01ms; --bb-dur-cheer: 0.01ms; --bb-dur-pulse: 0.01ms;
+    }
+    /* Belt and braces over third-party CSS too (Blockly's workspace-scroll glide included). */
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0s !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      transition-delay: 0s !important;
+      scroll-behavior: auto !important;
+    }
+    .confetti-piece { display: none; }
+  }
+}
+
+
+/* ============================================================================
+   9  BLOCKLY SKIN (UNLAYERED ON PURPOSE)
+   Blockly injects its own stylesheet as a plain, unlayered <style> prepended to <head>.
+   In the cascade, unlayered normal rules always beat layered ones, so anything inside an
+   @layer would silently lose. These rules therefore sit outside the layers and are scoped
+   under #blockly-div (an id outranks Blockly's class-only selectors, including the
+   renderer sheet's `.name-renderer.name-theme ...` ones). `!important` appears only where
+   Blockly writes the value inline from JavaScript (theme colours, toolbox row fill, dot
+   size). Class names below were read from blockly 13.3.0's bundle and from js/blocks.js,
+   not guessed.
+
+   Rail structure produced by blocks.js (custom category class):
+     .blocklyToolbox > .blocklyToolboxCategoryGroup > .blocklyToolboxCategoryContainer
+       > .blocklyToolboxCategory[data-bb-colour="#hex"]  (+ .bb-cat-selected when chosen)
+         > .blocklyTreeRowContentContainer > span.bb-cat-dot + span.blocklyToolboxCategoryLabel
+   ============================================================================ */
+
+/* Keyboard-navigation highlights use these two variables; ink/near-white (by theme) instead of yellow/blue. */
+#blockly-div .injectionDiv {
+  --blockly-active-node-color: var(--bb-ink);
+  --blockly-active-tree-color: var(--bb-ink);
+  --blockly-selection-width: 3px;
+}
+
+/* ----- workspace ----- */
+/* Theme colours are written inline by Blockly, so !important is needed to follow our tokens.
+   Do NOT set a fill on .blocklyMainBackground: that rect carries the dot-grid pattern. */
+#blockly-div .blocklySvg { background-color: var(--bb-workspace) !important; }
+#blockly-div .blocklyMainBackground { stroke: none; }
+#blockly-div .blocklySvg pattern line { stroke: var(--bb-grid); stroke-linecap: round; }
+
+/* ----- category rail ----- */
+#blockly-div .blocklyToolbox {
+  inline-size: var(--bb-rail-w);
+  padding-block: var(--bb-space-2);
+  background-color: var(--bb-toolbox) !important;
+  color: var(--bb-ink) !important;
+  border-inline-end: var(--bb-edge-w) solid var(--bb-edge);
+  overscroll-behavior: contain;
+  scrollbar-color: var(--bb-scroll) transparent;
+}
+#blockly-div .blocklyToolboxCategoryGroup { flex-wrap: nowrap; gap: var(--bb-space-1); padding-inline: var(--bb-space-2); }
+#blockly-div .blocklyToolboxCategoryContainer { border-radius: var(--bb-r-lg); }
+/* The row inside a scrolling list gets an INSET two-band ring: an outside ring would be clipped. */
+#blockly-div .blocklyToolboxCategoryContainer:focus-visible {
+  outline: 3px solid var(--bb-focus-outer);
+  outline-offset: -3px;
+  box-shadow: inset 0 0 0 6px var(--bb-focus-inner);
+}
+
+#blockly-div .blocklyToolboxCategory {
+  --cat: var(--bb-ink-muted);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  block-size: auto;
+  min-block-size: 3.5rem;
+  margin: 0;
+  padding: 0.375rem 0.25rem !important;     /* Blockly writes padding-left/right inline */
+  line-height: 1.1;
+  white-space: normal;
+  border-radius: var(--bb-r-lg);
+}
+#blockly-div .blocklyTreeRowContentContainer {
+  display: flex; flex-direction: column; align-items: center; gap: 0.125rem;
+  inline-size: 100%; min-inline-size: 0;
+}
+#blockly-div .blocklyToolboxCategoryLabel {
+  padding: 0;
+  font: var(--bb-fw-display) var(--bb-text-xs) / 1.1 var(--bb-font);
+  color: var(--bb-ink);
+  text-align: center;
+  /* Never split inside a word: a label that is too wide may spill into the row padding, but "Operator/s" is a defect.
+     Two-word labels ("My Blocks") still wrap at the space. */
+  overflow-wrap: normal;
+  word-break: keep-all;
+  cursor: pointer;
+}
+/* The round colour dot: its colour is inline, its size and outline are ours. */
+#blockly-div .bb-cat-dot {
+  inline-size: 1.75rem !important; block-size: 1.75rem !important;
+  border: 2.5px solid var(--bb-block-edge);
+  box-shadow: none !important;
+}
+
+/* Category colour -> --cat, keyed on the exact hexes blocks.js stores in data-bb-colour. */
+#blockly-div .blocklyToolboxCategory[data-bb-colour="#FFBF00" i] { --cat: var(--cat-events); }
+#blockly-div .blocklyToolboxCategory[data-bb-colour="#4C97FF" i] { --cat: var(--cat-motion); }
+#blockly-div .blocklyToolboxCategory[data-bb-colour="#9966FF" i] { --cat: var(--cat-looks); }
+#blockly-div .blocklyToolboxCategory[data-bb-colour="#CF63CF" i] { --cat: var(--cat-sound); }
+#blockly-div .blocklyToolboxCategory[data-bb-colour="#00B4A6" i] { --cat: var(--cat-pen); }
+#blockly-div .blocklyToolboxCategory[data-bb-colour="#FFAB19" i] { --cat: var(--cat-control); }
+#blockly-div .blocklyToolboxCategory[data-bb-colour="#5CB1D6" i] { --cat: var(--cat-sensing); }
+#blockly-div .blocklyToolboxCategory[data-bb-colour="#59C059" i] { --cat: var(--cat-operators); }
+#blockly-div .blocklyToolboxCategory[data-bb-colour="#FF8C1A" i] { --cat: var(--cat-variables); }
+#blockly-div .blocklyToolboxCategory[data-bb-colour="#FF6680" i] { --cat: var(--cat-myblocks); }
+
+#blockly-div .blocklyToolboxCategory:not(.bb-cat-selected):hover {
+  background-color: var(--bb-panel);
+  background-color: color-mix(in srgb, var(--cat) var(--bb-cat-hover-mix), var(--bb-toolbox));
+}
+/* Selected: tinted row, a bigger dot with a thicker edge, and an outlined bar at the start edge.
+   Three shape cues, so selection never relies on the tint alone. */
+#blockly-div .bb-cat-selected {
+  background-color: var(--bb-panel) !important;
+  background-color: color-mix(in srgb, var(--cat) var(--bb-cat-mix), var(--bb-toolbox)) !important;   /* row fill is written inline by blocks.js */
+}
+#blockly-div .bb-cat-selected .bb-cat-dot { inline-size: 2rem !important; block-size: 2rem !important; border-width: 4px; }
+#blockly-div .bb-cat-selected::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: var(--bb-space-1);
+  inset-block: 0.625rem;
+  inline-size: 0.25rem;
+  background: var(--cat);
+  outline: 2px solid var(--bb-edge);
+  border-radius: var(--bb-r-pill);
+}
+/* Dragging a block over the rail: dashed red edge and a faint red wash (delete zone). */
+#blockly-div .blocklyToolbox.blocklyToolboxDelete {
+  background-color: var(--bb-panel) !important;
+  background-color: color-mix(in srgb, var(--bb-danger) 14%, var(--bb-toolbox)) !important;
+  outline: 3px dashed var(--bb-danger);
+  outline-offset: -3px;
+}
+
+/* ----- flyout (the block drawer) ----- */
+#blockly-div .blocklyFlyoutBackground { fill: var(--bb-flyout) !important; fill-opacity: 1 !important; }
+#blockly-div .blocklyToolboxFlyout { border-inline-end: var(--bb-edge-w) solid var(--bb-edge); }
+/* "Make a variable" / "Make a block": the primary pill with a lip. The text is ink (blocks.js). */
+#blockly-div .blocklyFlyoutButtonBackground {
+  fill: var(--bb-accent); stroke: var(--bb-block-edge); stroke-width: 3px; rx: 14px; ry: 14px;
+}
+#blockly-div .blocklyFlyoutButtonShadow { fill: var(--bb-block-edge); rx: 14px; ry: 14px; transform: translateY(3px); }
+#blockly-div .blocklyFlyoutButton:hover > .blocklyFlyoutButtonBackground { fill: var(--bb-accent-hover); }
+#blockly-div .blocklyFlyoutButton:active > .blocklyFlyoutButtonBackground { transform: translateY(3px); }
+
+/* ----- blocks ----- */
+/* Ink outline on every block: category fills alone are < 3:1 on the light workspace (design.md 5.3).
+   Insertion markers (the drop preview) keep Blockly's no-stroke ghost look. */
+#blockly-div .blocklyDraggable:not(.blocklyInsertionMarker) > .blocklyPath:not(.blocklyPathSelected) {
+  stroke: var(--bb-block-edge);
+  stroke-width: 2px;
+}
+/* Selected: thicker ink edge with a white halo. Zelos draws it as an extra path whose default
+   glow is a yellow SVG filter; the filter is replaced here. */
+#blockly-div .blocklySelected > .blocklyPath:not(.blocklyPathSelected) { stroke: var(--bb-select-edge); stroke-width: 3.5px; }
+#blockly-div .blocklySelected > .blocklyPathSelected {
+  fill: none;
+  stroke: var(--bb-select-edge);
+  stroke-width: 3.5px;
+  filter: drop-shadow(0 0 2px var(--bb-select-halo)) drop-shadow(0 0 2px var(--bb-select-halo));
+}
+/* Running (class set by app.js through block.addClass): ink edge + yellow halo. Declared after
+   "selected", so running wins. The halo is static on purpose: a pulsing SVG filter repaints the
+   whole workspace layer and the highlighted block changes every frame in a loop. */
+#blockly-div .bb-running > .blocklyPath:not(.blocklyPathSelected),
+#blockly-div .bb-running > .blocklyPathSelected {
+  stroke: var(--bb-running-edge);
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 4px var(--bb-running-glow)) drop-shadow(0 0 8px var(--bb-running-glow));
+}
+/* Keyboard focus (Blockly 13 sets .blocklyActiveFocus on the path / field rect). Our ink outline above
+   is more specific than Blockly's own focus stroke, which would otherwise make a focused block look
+   identical to an unfocused one. Fixed ink + white halo reads on every category fill and on both
+   workspaces (design.md section 4). Fields: Blockly's injected sheet forces `stroke: none !important`
+   on dropdown rects, so the focus stroke needs !important and a higher-specificity selector. */
+#blockly-div .blocklyDraggable:not(.blocklyInsertionMarker) > .blocklyPath.blocklyActiveFocus:not(.blocklyPathSelected) {
+  stroke: var(--bb-block-edge);
+  stroke-width: 4px;
+  filter: drop-shadow(0 0 2px var(--bb-select-halo)) drop-shadow(0 0 2px var(--bb-select-halo));
+}
+#blockly-div .blocklyActiveFocus.blocklyField > .blocklyFieldRect {
+  stroke: var(--ink-on-cat) !important;
+  stroke-width: 3px !important;
+}
+/* Lifted brick while dragging; skipped on touch screens where the filter would cost frames. */
+@media (pointer: fine) {
+  #blockly-div .blocklyDragging { filter: drop-shadow(0 6px 0 var(--bb-lip-color)); }
+}
+
+/* ----- scrollbars ----- */
+#blockly-div .blocklyScrollbarHandle {
+  fill: var(--bb-scroll) !important;
+  fill-opacity: 1 !important;
+  rx: 6px; ry: 6px;
+}
+#blockly-div .blocklyScrollbarHandle:hover { fill: var(--bb-ink-muted) !important; }
+
+/* ----- trashcan (a picture, so only filters can recolour it) ----- */
+#blockly-div .blocklyTrash { filter: var(--bb-trash-filter) drop-shadow(0 3px 0 var(--bb-lip-color)); }
+
+/* ----- live number/text editor opened on a block field: white field, ink text, both themes ----- */
+.blocklyWidgetDiv .blocklyHtmlInput {
+  background: var(--bb-stage-bg);
+  color: var(--ink-on-cat);
+  border: 2px solid var(--ink-on-cat);
+  border-radius: var(--bb-r-sm);
+  font-weight: var(--bb-fw-display);
+}
+
+/* ----- right-click menu (dropdown lists keep the block's own colour, set inline by Blockly) ----- */
+.blocklyWidgetDiv .blocklyMenu {
+  padding: 0.375rem;
+  background: var(--bb-surface);
+  color: var(--bb-ink);
+  border: var(--bb-edge-w) solid var(--bb-edge);
+  border-radius: var(--bb-r-md);
+  box-shadow: var(--bb-shadow-3);
+  font: var(--bb-fw-ui) var(--bb-text-sm) / 1.3 var(--bb-font);
+}
+.blocklyWidgetDiv .blocklyMenuItem {
+  min-block-size: var(--bb-hit);
+  display: flex; align-items: center;
+  border-inline-start: 4px solid transparent;
+  border-radius: var(--bb-r-sm);
+  color: var(--bb-ink);
+}
+.blocklyWidgetDiv .blocklyMenuItemHighlight { background-color: var(--bb-panel); border-inline-start-color: var(--bb-accent); }
+.blocklyWidgetDiv .blocklyMenuItemDisabled { color: var(--bb-ink-muted); }
+.blocklyDropDownDiv .blocklyMenuItem { min-block-size: 2.5rem; display: flex; align-items: center; font-weight: var(--bb-fw-display); }
+
+/* ----- tooltip ----- */
+.blocklyTooltipDiv {
+  background: var(--bb-inverse-bg);
+  color: var(--bb-inverse-ink);
+  border: 0;
+  border-radius: var(--bb-r-sm);
+  padding: 0.375rem 0.625rem;
+  box-shadow: var(--bb-shadow-1);
+  font: var(--bb-fw-ui) var(--bb-text-sm) / 1.3 var(--bb-font);
+  opacity: 1;
+}
+
+/* ----- phones: icon-only 56px rail (the label stays for screen readers) ----- */
+@media (width < 43.75rem) {
+  #blockly-div .blocklyToolbox { inline-size: var(--bb-rail-w-compact); }
+  #blockly-div .blocklyToolboxCategoryGroup { padding-inline: var(--bb-space-1); }
+  #blockly-div .blocklyToolboxCategory { min-block-size: var(--bb-hit); }
+  #blockly-div .blocklyToolboxCategoryLabel {
+    position: absolute; inline-size: 1px; block-size: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  }
+}
+
+/* ----- reduced motion: Blockly's own glide when it recentres the workspace ----- */
+@media (prefers-reduced-motion: reduce) {
+  #blockly-div .blocklyCanvasTransitioning { transition: none !important; }
+}

@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <!-- sec:start -->
+  <!-- SENTRY, docs/qa.md section "Security". Hashes below = the two inline scripts (boot, perf preload) and MUST be recomputed whenever either changes
+       (tests/run.mjs "csp" fails loudly if they drift). This region sits directly after <meta charset> on purpose: a CSP <meta> only governs what is parsed after it, so the inline scripts below are checked against these hashes. 'unsafe-eval' is required by ADR 0003 (generated code runs via new Function; every generator emits only
+       JSON.stringify/Number literals, and uploads pass BB.blocks.sanitizeXml first). 'unsafe-inline' in style-src is required because Blockly injects style elements.
+       img-src lists jsDelivr ONLY for Blockly's media/sprites.svg (trashcan picture, app.js opts.media); drop it once that file is self-hosted.
+       frame-ancestors / report-uri / sandbox are ignored in a <meta> CSP and GitHub Pages cannot send headers, so clickjacking protection is NOT available (documented). -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net 'unsafe-eval' 'sha256-zhRYatgXxd2OKhdI+U7J80uK/RG4gdOinI1XwHODuow=' 'sha256-oBdTaW0GbV2ksfvyejYVeaUrQe1AJ7OCxUxAsUFG0qg='; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://cdn.jsdelivr.net; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <!-- sec:end -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BoltBlocks — block coding for kids</title>
+  <!-- Boot script: runs synchronously so lang/dir/theme are stamped before first paint (no flash of LTR or of the wrong theme; ADR 0004). Storage can throw (private mode, file://) so every read is guarded. The `js` class lets CSS show the "Loading…" skeleton only when scripts can actually run (ADR 0002). -->
+  <script>
+    (function () {
+      var root = document.documentElement, lang = '', theme = '';
+      try {
+        lang = localStorage.getItem('boltblocks.lang') || '';
+        theme = localStorage.getItem('boltblocks.theme') || '';
+      } catch (e) { /* storage unavailable: fall through to defaults */ }
+      if (lang !== 'en' && lang !== 'ar') {
+        lang = /^ar(-|$)/i.test(navigator.language || '') ? 'ar' : 'en';
+      }
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      root.lang = lang;
+      root.dir = lang === 'ar' ? 'rtl' : 'ltr';
+      root.setAttribute('data-theme', theme);
+      root.classList.add('js');
+    })();
+  </script>
+  <!-- seo:start -->
+  <!-- BEACON. Spec and rationale: docs/seo.md. Keep description/title text in sync with the visible shell. -->
+  <meta name="description" content="BoltBlocks is a free block-coding playground for kids aged 7 to 14. Snap blocks together to make robot friends move, talk and draw. Works in English and Arabic.">
+  <meta name="color-scheme" content="light dark">
+  <!-- Values = the bb-surface token (the top bar) from docs/design.md. The in-app theme toggle can differ from the OS setting; see docs/seo.md. -->
+  <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1C1C3F" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="https://op-h.github.io/bolt/">
+  <!-- bolt.svg is square and reads at 16-32px; logo.svg is a 250x56 wordmark and would be squashed into a tab icon. -->
+  <link rel="icon" type="image/svg+xml" href="assets/bolt.svg">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="BoltBlocks">
+  <meta property="og:title" content="BoltBlocks — block coding for kids">
+  <meta property="og:description" content="BoltBlocks is a free block-coding playground for kids aged 7 to 14. Snap blocks together to make robot friends move, talk and draw. Works in English and Arabic.">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="BoltBlocks — block coding for kids">
+  <meta name="twitter:description" content="BoltBlocks is a free block-coding playground for kids aged 7 to 14. Snap blocks together to make robot friends move, talk and draw. Works in English and Arabic.">
+  <meta property="og:url" content="https://op-h.github.io/bolt/">
+  <!-- TODO(content): og:image and twitter:image need ABSOLUTE urls and a real share image (1200x630 PNG/JPG; SVG is not accepted by most scrapers). None exists yet, so none is emitted.
+  <meta property="og:image" content="https://op-h.github.io/bolt/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="TODO(content): describe the share image">
+  <meta name="twitter:image" content="https://op-h.github.io/bolt/assets/og-image.png">
+  (When an image exists, switch twitter:card to summary_large_image.)
+  -->
+  <!-- No hreflang/alternate links on purpose: EN/AR is switched client-side on ONE url (ADR 0004), so there is no second URL to point at. -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "BoltBlocks",
+    "url": "https://op-h.github.io/bolt/",
+    "description": "A free block-coding playground for kids aged 7 to 14. Snap blocks together to make robot friends move, talk and draw.",
+    "applicationCategory": "EducationalApplication",
+    "operatingSystem": "Any operating system with a modern web browser",
+    "browserRequirements": "Requires JavaScript and a modern web browser with HTML5 canvas support",
+    "inLanguage": ["en", "ar"],
+    "isAccessibleForFree": true,
+    "typicalAgeRange": "7-14",
+    "audience": { "@type": "PeopleAudience", "suggestedMinAge": 7, "suggestedMaxAge": 14 },
+    "featureList": ["Drag-and-drop block coding workspace", "Step-by-step lessons with hints", "Stage with movable characters", "English and Arabic (right-to-left) interface"]
+  }
+  </script>
+  <!-- seo:end -->
+  <!-- perf:start -->
+  <!-- QUARTZ, docs/perf.md section 5. Start the Blockly message file in parallel with Blockly core instead of after it: app.js can only request it once core has been parsed, which put one extra round trip on the boot path. Lab (Slow 4G, CPU 4x, n=5): boot-ready median 3072 -> 2874 ms. The boot script above has already stamped html lang (en|ar), so only the file that is needed is fetched. The preload carries the same integrity as app.js loadScript(): without it Chrome logs a console warning ("preload ... integrity mismatch", SENTRY F1) because app.js sets SRI on the later request; with both set it is one transfer. Keep the URL in step with loadBlocklyMessages() in app.js. Needs a CSP script hash (docs/perf.md section 5). Measured and rejected, do not re-add without new numbers: preconnect to cdn.jsdelivr.net, preload of the Nunito font. -->
+  <script>
+    (function () {
+      // Keep in sync with MSG_SRI in js/app.js (the source of truth); SENTRY's static test checks they match.
+      var sri = {
+        en: 'sha384-5WVWW8OKnF6KCXKbhftrLAeT8GzsPPpK5xSrOWgyRuttDnZrICuldWVHbkg+DhIV',
+        ar: 'sha384-dSQN69uPiQ8AqkX1oCvQAGGUsQnk5oLqlHdsBmb1DK2ayW6xTOQ2O2/l8ETeSHuh'
+      };
+      var lang = document.documentElement.lang;
+      var l = document.createElement('link');
+      l.rel = 'preload'; l.as = 'script'; l.crossOrigin = 'anonymous';
+      if (sri[lang]) l.integrity = sri[lang];
+      l.href = 'https://cdn.jsdelivr.net/npm/blockly@13.3.0/msg/' + lang + '.js';
+      document.head.appendChild(l);
+    })();
+  </script>
+  <!-- perf:end -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&amp;family=Cairo:wght@600;800&amp;display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/blockly@13.3.0/blockly_compressed.js" integrity="sha384-SgkqBMZ4iNwgeoGJxSQlZI+ZHyufRuhA5vy7i+KHevkzshKrqjmtbrO4EnHZMnu9" crossorigin="anonymous" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/blockly@13.3.0/blocks_compressed.js" integrity="sha384-Cjql5OtAv7ZrlRS0qJY11yhU/FXtoGT7UEYfG/eSzwAJXaScGUsuSQCJ9TK73i5E" crossorigin="anonymous" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/blockly@13.3.0/javascript_compressed.js" integrity="sha384-eMjcNWpSkjOjJl5NY4cqX2fZT4BVKukRo02jAl1GvA2EwplAXpMZAVmdcWgmRBpG" crossorigin="anonymous" defer></script>
+  <script src="js/blocks.js" defer></script>
+  <script src="js/generators.js" defer></script>
+  <script src="js/runtime.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#blockly-div" data-i18n="skip.workspace">Skip to the block workspace</a>
+  <a class="skip-link" href="#stage" data-i18n="skip.stage">Skip to the stage</a>
+
+  <!-- Inline sprite sheet (not an external file, so file:// works). Everything between the markers is generated verbatim from assets/icons.svg + assets/bolt-symbols.svg. -->
+  <!-- icons:start -->
+  <svg class="sprite-sheet" width="0" height="0" aria-hidden="true" focusable="false">
+<!--
+    BoltBlocks icon sheet (MUSE). 36 symbols, 24x24 grid, chunky 2.5 stroke, round caps and joins.
+    Drawing attributes live on each <symbol> so GRANITE can inline this file verbatim into the page sprite.
+    Colour comes from `color` on the referencing <svg class="icon">; do not set fill/stroke on .icon in CSS.
+    Fixed colours: i-flag pennant #19A051 (3.40:1 on white, 4.33:1 on dark panel) and i-stop #E5383B
+    (4.23:1 on white, 3.47:1 on dark panel); both keep a currentColor outline.
+  -->
+  <symbol id="i-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 3.5v17"/>
+    <path d="M5 4.5h13l-3.2 4.3L18 13H5z" fill="#19A051"/>
+  </symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="5" y="5" width="14" height="14" rx="3.5" fill="#E5383B"/>
+  </symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/>
+    <rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/>
+  </symbol>
+  <symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/>
+  </symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 5v14M5 12h14"/>
+  </symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 12h14"/>
+  </symbol>
+  <symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="6.5"/>
+    <path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>
+    <path d="M12 12h.01"/>
+  </symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 7h16M9 7V4.5h6V7"/>
+    <path d="M6 7l1 13h10l1-13"/>
+  </symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6L7 7M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/>
+  </symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.8 4.5A8 8 0 1 0 19.5 14.2 8 8 0 0 1 9.8 4.5z"/>
+  </symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9"/>
+    <ellipse cx="12" cy="12" rx="4" ry="9"/>
+    <path d="M3 12h18"/>
+  </symbol>
+  <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6.5 3h7.5l4.5 4.5V21h-12z"/>
+    <path d="M14 3v5h4.5"/>
+  </symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4l2 2.5h8a1.5 1.5 0 0 1 1.5 1.5V18a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 18z"/>
+  </symbol>
+  <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 4v11M7.5 10.5L12 15l4.5-4.5"/>
+    <path d="M5 19.5h14"/>
+  </symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 15V4M7.5 8.5L12 4l4.5 4.5"/>
+    <path d="M5 19.5h14"/>
+  </symbol>
+  <symbol id="i-new" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6.5 3h7.5l4.5 4.5V21h-12z"/>
+    <path d="M12.5 11.5v6M9.5 14.5h6"/>
+  </symbol>
+  <symbol id="i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H16l4 4v12.5a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 5 19.5z"/>
+    <path d="M8 3v5h7V3M8 21v-6.5h8V21"/>
+  </symbol>
+  <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5z"/>
+    <path d="M12 6.5v13"/>
+  </symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/>
+    <circle cx="12" cy="12" r="3"/>
+  </symbol>
+  <symbol id="i-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/>
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M4 4l16 16"/>
+  </symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 12.5l4.5 4.5L19 7"/>
+  </symbol>
+  <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 6l12 12M18 6L6 18"/>
+  </symbol>
+  <symbol id="i-turtle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3.5 14.5a7 7.5 0 0 1 14 0z"/>
+    <path d="M10.5 7v7.5M7 14.5v4M14 14.5v4"/>
+    <circle cx="19.8" cy="12.8" r="2.3"/>
+  </symbol>
+  <symbol id="i-rabbit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="8" cy="6.5" rx="1.6" ry="4.2"/>
+    <ellipse cx="16" cy="6.5" rx="1.6" ry="4.2"/>
+    <circle cx="12" cy="15" r="5.5"/>
+    <path d="M10 14.5h.01M14 14.5h.01"/>
+  </symbol>
+  <symbol id="i-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3.6L14.5 9.2 20.6 9.8 16 13.9 17.3 19.9 12 16.8 6.7 19.9 8 13.9 3.4 9.8 9.5 9.2z" fill="currentColor"/>
+  </symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 9.5l6 6 6-6"/>
+  </symbol>
+  <symbol id="i-chevron-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14.5 6l-6 6 6 6"/>
+  </symbol>
+  <symbol id="i-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.5 6l6 6-6 6"/>
+  </symbol>
+  <symbol id="i-gamepad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7 7.5h10a4.5 4.5 0 0 1 4.4 5.5l-.8 3.6a2.6 2.6 0 0 1-4.4 1.2L14.5 16h-5l-1.7 1.8a2.6 2.6 0 0 1-4.4-1.2L2.6 13A4.5 4.5 0 0 1 7 7.5z"/>
+    <path d="M7.5 10.5v3M6 12h3M16 11h.01M18 13h.01"/>
+  </symbol>
+  <symbol id="i-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9"/>
+    <path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1.9-1.1 1.8"/>
+    <path d="M12 17h.01"/>
+  </symbol>
+  <symbol id="i-bulb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3.5A6 6 0 0 0 8.5 14.4c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3.5z"/>
+    <path d="M9.5 20h5"/>
+  </symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 15.5L15.8 4.7a2 2 0 0 1 2.8 0l.7.7a2 2 0 0 1 0 2.8L8.5 19z"/>
+    <path d="M5 15.5L4 20l4.5-1M14 6.5l3.5 3.5"/>
+  </symbol>
+  <symbol id="i-sprite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 19.5v-8a7 7 0 0 1 14 0v8l-2.3-1.8-2.4 1.8L12 17.7 9.7 19.5l-2.4-1.8z"/>
+    <path d="M9.5 11.5h.01M14.5 11.5h.01"/>
+  </symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 12a7.5 7.5 0 1 0 2.2-5.3L4.5 9.5"/>
+    <path d="M4.5 4.5v5h5"/>
+  </symbol>
+<!--
+    Bolt poses + logo mark (MUSE). Self-contained: literal colours only, no gradients, no ids other than the symbol ids,
+    no <style>. Safe to inline verbatim. Palette: body #4C97FF, shade #2F6FD6, accent #FFD60A, ink #1B1B3A, screen glow #8DF5E4.
+  -->
+  <symbol id="bolt-happy" viewBox="0 0 200 200">
+    <ellipse cx="100" cy="188" rx="46" ry="6" fill="#1B1B3A" opacity="0.14"/>
+    <g stroke="#1B1B3A" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+      <rect x="70" y="154" width="24" height="28" rx="10" fill="#2F6FD6"/>
+      <rect x="106" y="154" width="24" height="28" rx="10" fill="#2F6FD6"/>
+      <ellipse cx="46" cy="136" rx="10" ry="19" transform="rotate(16 46 136)" fill="#4C97FF"/>
+      <ellipse cx="154" cy="136" rx="10" ry="19" transform="rotate(-16 154 136)" fill="#4C97FF"/>
+      <rect x="56" y="104" width="88" height="62" rx="24" fill="#4C97FF"/>
+      <path d="M84 134h10a6 6 0 0 1 12 0h10a6 6 0 0 1 6 6v12a6 6 0 0 1-6 6H84a6 6 0 0 1-6-6v-12a6 6 0 0 1 6-6z" fill="#FFD60A"/>
+      <circle cx="100" cy="148" r="4" fill="#1B1B3A"/>
+      <polygon points="19,78 24.5,68.5 35.5,68.5 41,78 35.5,87.5 24.5,87.5" fill="#FFD60A"/>
+      <polygon points="159,78 164.5,68.5 175.5,68.5 181,78 175.5,87.5 164.5,87.5" fill="#FFD60A"/>
+      <polygon points="108,4 91,19 100,19 94,40 111,15 102,15" fill="#FFD60A"/>
+      <rect x="38" y="36" width="124" height="84" rx="34" fill="#4C97FF"/>
+    </g>
+    <path d="M52 58q4-10 16-12" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.55"/>
+    <rect x="54" y="52" width="92" height="52" rx="24" fill="#1B1B3A"/>
+    <ellipse cx="80" cy="76" rx="8" ry="10" fill="#8DF5E4"/>
+    <ellipse cx="120" cy="76" rx="8" ry="10" fill="#8DF5E4"/>
+    <path d="M86 90Q100 100 114 90" fill="none" stroke="#8DF5E4" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="66" cy="92" r="6" fill="#FF6680" opacity="0.85"/>
+    <circle cx="134" cy="92" r="6" fill="#FF6680" opacity="0.85"/>
+  </symbol>
+
+  <symbol id="bolt-think" viewBox="0 0 200 200">
+    <ellipse cx="100" cy="188" rx="46" ry="6" fill="#1B1B3A" opacity="0.14"/>
+    <g stroke="#1B1B3A" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+      <rect x="70" y="154" width="24" height="28" rx="10" fill="#2F6FD6"/>
+      <rect x="106" y="154" width="24" height="28" rx="10" fill="#2F6FD6"/>
+      <ellipse cx="46" cy="136" rx="10" ry="19" transform="rotate(16 46 136)" fill="#4C97FF"/>
+      <ellipse cx="156" cy="112" rx="10" ry="21" transform="rotate(24 156 112)" fill="#4C97FF"/>
+      <rect x="56" y="104" width="88" height="62" rx="24" fill="#4C97FF"/>
+      <path d="M84 134h10a6 6 0 0 1 12 0h10a6 6 0 0 1 6 6v12a6 6 0 0 1-6 6H84a6 6 0 0 1-6-6v-12a6 6 0 0 1 6-6z" fill="#FFD60A"/>
+      <circle cx="100" cy="148" r="4" fill="#1B1B3A"/>
+      <g transform="rotate(-6 100 120)">
+        <polygon points="19,78 24.5,68.5 35.5,68.5 41,78 35.5,87.5 24.5,87.5" fill="#FFD60A"/>
+        <polygon points="159,78 164.5,68.5 175.5,68.5 181,78 175.5,87.5 164.5,87.5" fill="#FFD60A"/>
+        <polygon points="108,4 91,19 100,19 94,40 111,15 102,15" fill="#FFD60A"/>
+        <rect x="38" y="36" width="124" height="84" rx="34" fill="#4C97FF"/>
+      </g>
+      <circle cx="168" cy="44" r="4" fill="#FFFFFF" stroke-width="3"/>
+      <circle cx="178" cy="30" r="6" fill="#FFFFFF" stroke-width="3"/>
+      <circle cx="186" cy="12" r="7" fill="#FFFFFF" stroke-width="3"/>
+    </g>
+    <g transform="rotate(-6 100 120)">
+      <path d="M52 58q4-10 16-12" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.55"/>
+      <rect x="54" y="52" width="92" height="52" rx="24" fill="#1B1B3A"/>
+      <ellipse cx="80" cy="78" rx="8" ry="10" fill="#8DF5E4"/>
+      <ellipse cx="120" cy="78" rx="8" ry="10" fill="#8DF5E4"/>
+      <path d="M108 62L130 57" fill="none" stroke="#8DF5E4" stroke-width="4" stroke-linecap="round"/>
+      <path d="M88 94Q96 90 104 94T116 94" fill="none" stroke="#8DF5E4" stroke-width="4" stroke-linecap="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="bolt-cheer" viewBox="0 0 200 200">
+    <ellipse cx="100" cy="188" rx="38" ry="5" fill="#1B1B3A" opacity="0.14"/>
+    <g transform="translate(0 -6)">
+      <g stroke="#1B1B3A" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+        <rect x="70" y="154" width="24" height="28" rx="10" fill="#2F6FD6"/>
+        <rect x="106" y="154" width="24" height="28" rx="10" fill="#2F6FD6"/>
+        <ellipse cx="44" cy="112" rx="10" ry="21" transform="rotate(-28 44 112)" fill="#4C97FF"/>
+        <ellipse cx="156" cy="112" rx="10" ry="21" transform="rotate(28 156 112)" fill="#4C97FF"/>
+        <rect x="56" y="104" width="88" height="62" rx="24" fill="#4C97FF"/>
+        <path d="M84 134h10a6 6 0 0 1 12 0h10a6 6 0 0 1 6 6v12a6 6 0 0 1-6 6H84a6 6 0 0 1-6-6v-12a6 6 0 0 1 6-6z" fill="#FFD60A"/>
+        <circle cx="100" cy="148" r="4" fill="#1B1B3A"/>
+        <polygon points="19,78 24.5,68.5 35.5,68.5 41,78 35.5,87.5 24.5,87.5" fill="#FFD60A"/>
+        <polygon points="159,78 164.5,68.5 175.5,68.5 181,78 175.5,87.5 164.5,87.5" fill="#FFD60A"/>
+        <polygon points="108,4 91,19 100,19 94,40 111,15 102,15" fill="#FFD60A"/>
+        <rect x="38" y="36" width="124" height="84" rx="34" fill="#4C97FF"/>
+      </g>
+      <path d="M52 58q4-10 16-12" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.55"/>
+      <rect x="54" y="52" width="92" height="52" rx="24" fill="#1B1B3A"/>
+      <path d="M70 82Q80 64 90 82M110 82Q120 64 130 82" fill="none" stroke="#8DF5E4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M84 88Q100 108 116 88z" fill="#FF6680"/>
+    </g>
+    <g fill="#FFD60A" stroke="#1B1B3A" stroke-width="3" stroke-linejoin="round">
+      <path d="M24 20L27 27 34 30 27 33 24 40 21 33 14 30 21 27z"/>
+      <path d="M176 26L178.5 31.5 184 34 178.5 36.5 176 42 173.5 36.5 168 34 173.5 31.5z"/>
+    </g>
+  </symbol>
+
+  <symbol id="bolt-wave" viewBox="0 0 200 200">
+    <ellipse cx="100" cy="188" rx="46" ry="6" fill="#1B1B3A" opacity="0.14"/>
+    <g stroke="#1B1B3A" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+      <rect x="70" y="154" width="24" height="28" rx="10" fill="#2F6FD6"/>
+      <rect x="106" y="154" width="24" height="28" rx="10" fill="#2F6FD6"/>
+      <ellipse cx="46" cy="136" rx="10" ry="19" transform="rotate(16 46 136)" fill="#4C97FF"/>
+      <ellipse cx="156" cy="109" rx="10" ry="22" transform="rotate(30 156 109)" fill="#4C97FF"/>
+      <rect x="56" y="104" width="88" height="62" rx="24" fill="#4C97FF"/>
+      <path d="M84 134h10a6 6 0 0 1 12 0h10a6 6 0 0 1 6 6v12a6 6 0 0 1-6 6H84a6 6 0 0 1-6-6v-12a6 6 0 0 1 6-6z" fill="#FFD60A"/>
+      <circle cx="100" cy="148" r="4" fill="#1B1B3A"/>
+      <polygon points="19,78 24.5,68.5 35.5,68.5 41,78 35.5,87.5 24.5,87.5" fill="#FFD60A"/>
+      <polygon points="159,78 164.5,68.5 175.5,68.5 181,78 175.5,87.5 164.5,87.5" fill="#FFD60A"/>
+      <polygon points="108,4 91,19 100,19 94,40 111,15 102,15" fill="#FFD60A"/>
+      <rect x="38" y="36" width="124" height="84" rx="34" fill="#4C97FF"/>
+      <path d="M181 96q7 8 0 16M188 90q11 14 0 28" fill="none" stroke-width="4" opacity="0.6"/>
+    </g>
+    <path d="M52 58q4-10 16-12" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.55"/>
+    <rect x="54" y="52" width="92" height="52" rx="24" fill="#1B1B3A"/>
+    <ellipse cx="80" cy="76" rx="8" ry="10" fill="#8DF5E4"/>
+    <ellipse cx="120" cy="76" rx="8" ry="10" fill="#8DF5E4"/>
+    <path d="M86 90Q100 100 114 90" fill="none" stroke="#8DF5E4" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="66" cy="92" r="6" fill="#FF6680" opacity="0.85"/>
+    <circle cx="134" cy="92" r="6" fill="#FF6680" opacity="0.85"/>
+  </symbol>
+
+  <symbol id="logo-mark" viewBox="0 0 48 48">
+    <path d="M7 15a5 5 0 0 1 5-5h7a5 5 0 0 1 10 0h7a5 5 0 0 1 5 5v21a5 5 0 0 1-5 5H12a5 5 0 0 1-5-5z" fill="#4C97FF" stroke="#1B1B3A" stroke-width="3" stroke-linejoin="round"/>
+    <polygon points="26,16 17,27 23,27 20,37 31,24 25,24" fill="#FFD60A" stroke="#1B1B3A" stroke-width="2.5" stroke-linejoin="round"/>
+  </symbol>
+  </svg>
+  <!-- icons:end -->
+
+  <header id="topbar" class="topbar">
+    <h1 class="sr-only" data-i18n="app.h1">BoltBlocks — block coding workspace</h1>
+    <a id="logo" class="logo" href="./">
+      <svg class="logo__mark" width="36" height="36" aria-hidden="true" focusable="false"><use href="#logo-mark"/></svg>
+      <span class="wordmark" translate="no">BoltBlocks</span>
+    </a>
+
+    <p class="topbar__project">
+      <label class="sr-only" for="project-name" data-i18n="top.project_label">Project name</label>
+      <input id="project-name" class="field-input field-input--project" type="text" maxlength="60" autocomplete="off" spellcheck="false" enterkeyhint="done" placeholder="My project" data-i18n-attr="placeholder:top.project_placeholder">
+    </p>
+
+    <div class="topbar__actions">
+      <div class="menu">
+        <button id="btn-file" class="btn btn--ghost" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="file-menu-list">
+          <svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-file"/></svg>
+          <span data-i18n="top.file">File</span>
+          <svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-chevron-down"/></svg>
+        </button>
+        <ul id="file-menu-list" class="menu__list" role="menu" aria-labelledby="btn-file" hidden>
+          <li role="none"><button id="mi-new" class="menu__item" type="button" role="menuitem" tabindex="-1"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-new"/></svg><span data-i18n="top.new">New project</span></button></li>
+          <li role="none"><button id="mi-save" class="menu__item" type="button" role="menuitem" tabindex="-1"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-save"/></svg><span data-i18n="top.save">Save in this browser</span></button></li>
+          <li role="none"><button id="mi-load" class="menu__item" type="button" role="menuitem" tabindex="-1"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-folder"/></svg><span data-i18n="top.load">Open saved project…</span></button></li>
+          <li role="none"><button id="mi-download" class="menu__item" type="button" role="menuitem" tabindex="-1"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-download"/></svg><span data-i18n="top.download">Download project file</span></button></li>
+          <li role="none"><button id="mi-upload" class="menu__item" type="button" role="menuitem" tabindex="-1"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-upload"/></svg><span data-i18n="top.upload">Open project file…</span></button></li>
+        </ul>
+        <!-- Not focusable while hidden; opened programmatically by #mi-upload. Labelled in case a browser ever exposes it. -->
+        <input id="upload-input" type="file" accept=".json,application/json" hidden tabindex="-1" aria-label="Project file" data-i18n-attr="aria-label:top.upload_input">
+      </div>
+
+      <button id="btn-lessons" class="btn btn--secondary" type="button">
+        <svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-book"/></svg>
+        <span data-i18n="top.lessons">Lessons</span>
+      </button>
+      <button id="btn-theme" class="btn btn--ghost btn--round btn--toggle" type="button" aria-pressed="false" aria-label="Dark mode" title="Dark mode" data-i18n-attr="aria-label:top.theme;title:top.theme">
+        <span class="icon-swap icon-swap--off"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-sun"/></svg></span>
+        <span class="icon-swap icon-swap--on"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-moon"/></svg></span>
+      </button>
+      <button id="btn-lang" class="btn btn--ghost" type="button" title="Change language" data-i18n-attr="title:top.lang_title">
+        <svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-globe"/></svg>
+        <span id="btn-lang-label" lang="ar" data-i18n="top.lang_other">العربية</span>
+      </button>
+      <button id="btn-help" class="btn btn--ghost btn--round" type="button" aria-label="Help" title="Help" data-i18n-attr="aria-label:top.help;title:top.help">
+        <svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-help"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="app" class="app">
+    <!-- Painted before any script runs; app.js adds html.is-ready and CSS hides it (ADR 0002). Hidden entirely when scripting is off (the noscript message takes over). -->
+    <section id="app-boot" class="app-boot" role="status" aria-live="polite">
+      <svg class="bolt" width="120" height="120" viewBox="0 0 200 200" aria-hidden="true" focusable="false"><use href="#bolt-think"/></svg>
+      <!-- ADR 0007 d.1: static LCP candidate. Reuses wl.title / wl.text so Arabic needs no new keys. Not an h1 (sr-only #h1 owns that) and ids are omitted to keep #wl-title / #wl-text unique. -->
+      <p class="app-boot__title" data-i18n="wl.title">Hi, I'm Bolt!</p>
+      <p class="app-boot__text" data-i18n="wl.text">Snap blocks together to make your robot friends move, talk and draw.</p>
+      <p class="app-boot__status" data-i18n="boot.loading">Loading…</p>
+    </section>
+
+    <section id="workspace-panel" class="panel panel--workspace" aria-label="Block workspace" data-i18n-attr="aria-label:ws.title">
+      <h2 class="sr-only" data-i18n="ws.title">Block workspace</h2>
+      <div id="blockly-div" class="blockly-host" tabindex="-1"></div>
+      <div id="zoom-controls" class="zoom-controls" role="group" aria-label="Zoom" data-i18n-attr="aria-label:ws.zoom">
+        <button id="btn-zoom-in" class="btn btn--round btn--secondary" type="button" aria-label="Zoom in" title="Zoom in" data-i18n-attr="aria-label:ws.zoom_in;title:ws.zoom_in"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg></button>
+        <button id="btn-zoom-out" class="btn btn--round btn--secondary" type="button" aria-label="Zoom out" title="Zoom out" data-i18n-attr="aria-label:ws.zoom_out;title:ws.zoom_out"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-minus"/></svg></button>
+        <button id="btn-zoom-reset" class="btn btn--round btn--secondary" type="button" aria-label="Reset zoom" title="Reset zoom" data-i18n-attr="aria-label:ws.zoom_reset;title:ws.zoom_reset"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-target"/></svg></button>
+      </div>
+    </section>
+
+    <section id="stage-panel" class="panel panel--stage" aria-label="Stage" data-i18n-attr="aria-label:stage.title">
+      <h2 class="sr-only" data-i18n="stage.title">Stage</h2>
+
+      <div id="stage-toolbar" class="stage-toolbar" role="toolbar" aria-label="Stage controls" data-i18n-attr="aria-label:stage.toolbar">
+        <button id="btn-flag" class="btn btn--round btn--primary" type="button" aria-label="Run (green flag)" title="Run (green flag)" data-i18n-attr="aria-label:stage.flag;title:stage.flag"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-flag"/></svg></button>
+        <button id="btn-pause" class="btn btn--round btn--secondary btn--toggle" type="button" aria-pressed="false" aria-label="Pause" title="Pause" data-i18n-attr="aria-label:stage.pause;title:stage.pause"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-pause"/></svg></button>
+        <button id="btn-stop" class="btn btn--round btn--danger" type="button" aria-label="Stop" title="Stop" data-i18n-attr="aria-label:stage.stop;title:stage.stop"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-stop"/></svg></button>
+        <button id="btn-speed" class="btn btn--round btn--secondary btn--toggle" type="button" aria-pressed="false" aria-label="Slow motion" title="Slow motion" data-i18n-attr="aria-label:stage.speed;title:stage.speed"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-turtle"/></svg></button>
+        <button id="btn-dpad" class="btn btn--round btn--secondary btn--toggle" type="button" aria-pressed="false" aria-label="Arrow pad" title="Arrow pad" data-i18n-attr="aria-label:stage.dpad;title:stage.dpad"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-gamepad"/></svg></button>
+      </div>
+
+      <div id="stage-frame" class="stage-frame">
+        <canvas id="stage" class="stage" width="480" height="360" tabindex="0" role="img" aria-label="Stage: where your sprites move" aria-describedby="stage-desc" data-i18n-attr="aria-label:stage.canvas"><span data-i18n="stage.canvas_fallback">The stage needs a browser that supports canvas.</span></canvas>
+        <p id="stage-desc" class="sr-only" data-i18n="stage.canvas_desc">Arrow keys, letters and the space key go to your program while the stage has focus. Press Tab to move on.</p>
+        <p id="stage-live" class="sr-only" aria-live="polite" aria-atomic="true"></p>
+
+        <form id="ask-form" class="ask-form" hidden autocomplete="off">
+          <label id="ask-label" class="ask-form__label" for="ask-input" data-i18n="stage.ask_label">Your answer</label>
+          <input id="ask-input" class="field-input" type="text" autocomplete="off" enterkeyhint="send" maxlength="200">
+          <button id="ask-submit" class="btn btn--primary" type="submit"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-check"/></svg><span data-i18n="common.ok">OK</span></button>
+        </form>
+
+        <div id="dpad" class="dpad" role="group" aria-label="Arrow pad" data-i18n-attr="aria-label:stage.dpad" hidden>
+          <button class="btn btn--round btn--secondary dpad__key dpad__key--up" type="button" data-key="up" aria-label="Up" data-i18n-attr="aria-label:dpad.up"><svg class="icon icon--up" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-chevron-down"/></svg></button>
+          <button class="btn btn--round btn--secondary dpad__key dpad__key--left" type="button" data-key="left" aria-label="Left" data-i18n-attr="aria-label:dpad.left"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-chevron-left"/></svg></button>
+          <button class="btn btn--round btn--secondary dpad__key dpad__key--down" type="button" data-key="down" aria-label="Down" data-i18n-attr="aria-label:dpad.down"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-chevron-down"/></svg></button>
+          <button class="btn btn--round btn--secondary dpad__key dpad__key--right" type="button" data-key="right" aria-label="Right" data-i18n-attr="aria-label:dpad.right"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-chevron-right"/></svg></button>
+          <button class="btn btn--secondary dpad__key dpad__key--space" type="button" data-key="space" data-i18n="dpad.space">Space</button>
+        </div>
+      </div>
+
+      <section id="sprite-info" class="sprite-info" aria-label="Sprite settings" data-i18n-attr="aria-label:info.title">
+        <h3 class="sr-only" data-i18n="info.title">Sprite settings</h3>
+        <label class="field field--name"><span class="field__label" data-i18n="info.name">Name</span>
+          <input id="sprite-name" class="field-input" type="text" maxlength="30" autocomplete="off" spellcheck="false" enterkeyhint="done"></label>
+        <label class="field"><span class="field__label" data-i18n="info.x">x</span>
+          <input id="sprite-x" class="field-input" type="number" min="-240" max="240" step="1" autocomplete="off"></label>
+        <label class="field"><span class="field__label" data-i18n="info.y">y</span>
+          <input id="sprite-y" class="field-input" type="number" min="-180" max="180" step="1" autocomplete="off"></label>
+        <label class="field"><span class="field__label" data-i18n="info.dir">Direction</span>
+          <input id="sprite-dir" class="field-input" type="number" step="1" autocomplete="off"></label>
+        <label class="field"><span class="field__label" data-i18n="info.size">Size</span>
+          <input id="sprite-size" class="field-input" type="number" min="1" step="1" autocomplete="off"></label>
+        <button id="sprite-visible" class="btn btn--secondary btn--toggle" type="button" aria-pressed="true">
+          <span class="icon-swap icon-swap--on"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-eye"/></svg></span>
+          <span class="icon-swap icon-swap--off"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-eye-off"/></svg></span>
+          <span data-i18n="info.visible">Visible</span>
+        </button>
+      </section>
+
+      <section id="sprite-panel" class="sprite-panel" aria-label="Sprites" data-i18n-attr="aria-label:sprites.title">
+        <h3 class="sprite-panel__title" data-i18n="sprites.title">Sprites</h3>
+        <ul id="sprite-list" class="sprite-list" aria-label="Your sprites" data-i18n-attr="aria-label:sprites.list"></ul>
+        <button id="btn-add-sprite" class="btn btn--primary" type="button"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg><span data-i18n="sprites.add">Add sprite</span></button>
+      </section>
+    </section>
+
+    <aside id="lesson-panel" class="lesson-panel" aria-label="Lesson" data-i18n-attr="aria-label:lesson.panel" hidden>
+      <svg id="lesson-bolt" class="bolt" width="96" height="96" viewBox="0 0 200 200" aria-hidden="true" focusable="false"><use href="#bolt-happy"/></svg>
+      <h2 id="lesson-title" class="lesson-panel__title" data-i18n="lesson.title_default">Lesson</h2>
+      <p id="lesson-goal" class="lesson-panel__goal"></p>
+      <h3 class="lesson-panel__sub" data-i18n="lesson.steps">Steps</h3>
+      <ol id="lesson-steps" class="lesson-steps"></ol>
+      <h3 class="lesson-panel__sub" data-i18n="lesson.hint">Bolt's hint</h3>
+      <p id="lesson-hint-text" class="lesson-hint" aria-live="polite"></p>
+      <p class="lesson-panel__nav">
+        <button id="btn-hint-prev" class="btn btn--round btn--secondary" type="button" aria-label="Previous hint" title="Previous hint" data-i18n-attr="aria-label:lesson.hint_prev;title:lesson.hint_prev"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-chevron-left"/></svg></button>
+        <button id="btn-hint-next" class="btn btn--round btn--secondary" type="button" aria-label="Next hint" title="Next hint" data-i18n-attr="aria-label:lesson.hint_next;title:lesson.hint_next"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-chevron-right"/></svg></button>
+        <button id="btn-lesson-reset" class="btn btn--secondary" type="button"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-reset"/></svg><span data-i18n="lesson.reset">Start again</span></button>
+        <button id="btn-lesson-close" class="btn btn--ghost btn--round" type="button" aria-label="Close lesson" title="Close lesson" data-i18n-attr="aria-label:lesson.close;title:lesson.close"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button>
+      </p>
+      <p id="lesson-status" class="lesson-panel__status" role="status"></p>
+    </aside>
+  </main>
+
+  <div id="toast-region" class="toast-region" role="status" aria-live="polite"></div>
+
+  <div id="celebration" class="celebration" hidden>
+    <svg class="bolt" width="120" height="120" viewBox="0 0 200 200" aria-hidden="true" focusable="false"><use href="#bolt-cheer"/></svg>
+    <p id="celebration-text" class="celebration__text" data-i18n="celebrate.text">Great job!</p>
+  </div>
+
+  <!-- Shown by CSS only below 700px wide. -->
+  <div id="phone-notice" class="phone-notice" role="note">
+    <p data-i18n="notice.text">BoltBlocks works best on a tablet or a computer. You can still look around on a phone.</p>
+    <button id="btn-dismiss-notice" class="btn btn--secondary" type="button" data-i18n="notice.dismiss">Got it</button>
+  </div>
+
+  <dialog id="dlg-welcome" class="dlg dlg--welcome" aria-labelledby="wl-title" aria-describedby="wl-text">
+    <header class="dlg__head">
+      <h2 id="wl-title" class="dlg__title" data-i18n="wl.title">Hi, I'm Bolt!</h2>
+      <form method="dialog"><button class="btn btn--ghost btn--round dlg__close" type="submit" value="cancel" aria-label="Close" title="Close" data-i18n-attr="aria-label:common.close;title:common.close"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button></form>
+    </header>
+    <div class="dlg__body dlg__body--welcome">
+      <svg class="bolt" width="160" height="160" viewBox="0 0 200 200" aria-hidden="true" focusable="false"><use href="#bolt-wave"/></svg>
+      <p id="wl-text" data-i18n="wl.text">Snap blocks together to make your robot friends move, talk and draw.</p>
+    </div>
+    <footer class="dlg__actions">
+      <button id="wl-start" class="btn btn--primary" type="button" autofocus data-i18n="wl.start">Start coding</button>
+      <button id="wl-lessons" class="btn btn--secondary" type="button" data-i18n="wl.lessons">Try a lesson</button>
+      <!-- Ships hidden = the first-run state; app.js un-hides it when an autosave exists. -->
+      <button id="wl-continue" class="btn btn--secondary" type="button" hidden data-i18n="wl.continue">Continue my project</button>
+    </footer>
+  </dialog>
+
+  <dialog id="dlg-lessons" class="dlg" aria-labelledby="lessons-title">
+    <header class="dlg__head">
+      <h2 id="lessons-title" class="dlg__title" data-i18n="lessons.title">Lessons</h2>
+      <form method="dialog"><button class="btn btn--ghost btn--round dlg__close" type="submit" value="cancel" aria-label="Close" title="Close" data-i18n-attr="aria-label:common.close;title:common.close"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button></form>
+    </header>
+    <div class="dlg__body">
+      <p data-i18n="lessons.intro">Pick a lesson. Bolt will guide you step by step.</p>
+      <ol id="lesson-list" class="lesson-list"></ol>
+    </div>
+  </dialog>
+
+  <dialog id="dlg-sprites" class="dlg" aria-labelledby="char-title">
+    <header class="dlg__head">
+      <h2 id="char-title" class="dlg__title" data-i18n="char.title">Choose a character</h2>
+      <form method="dialog"><button class="btn btn--ghost btn--round dlg__close" type="submit" value="cancel" aria-label="Close" title="Close" data-i18n-attr="aria-label:common.close;title:common.close"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button></form>
+    </header>
+    <div class="dlg__body">
+      <ul id="char-list" class="char-list"></ul>
+    </div>
+  </dialog>
+
+  <dialog id="dlg-load" class="dlg" aria-labelledby="load-title">
+    <header class="dlg__head">
+      <h2 id="load-title" class="dlg__title" data-i18n="load.title">Open a saved project</h2>
+      <form method="dialog"><button class="btn btn--ghost btn--round dlg__close" type="submit" value="cancel" aria-label="Close" title="Close" data-i18n-attr="aria-label:common.close;title:common.close"><svg class="icon" width="24" height="24" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button></form>
+    </header>
+    <div class="dlg__body">
+      <ul id="saved-list" class="saved-list"></ul>
+      <!-- Ships visible = the empty state; app.js hides it when saved projects exist. -->
+      <p id="saved-empty" data-i18n="load.empty">No saved projects yet. Use File, then Save, to keep one.</p>
+    </div>
+  </dialog>
+
+  <dialog id="dlg-prompt" class="dlg dlg--small" aria-labelledby="prompt-title">
+    <form id="prompt-form" method="dialog" autocomplete="off">
+      <header class="dlg__head">
+        <h2 id="prompt-title" class="dlg__title" data-i18n="prompt.title">Name it</h2>
+      </header>
+      <div class="dlg__body">
+        <label id="prompt-label" class="field__label" for="prompt-input" data-i18n="prompt.label">Name</label>
+        <input id="prompt-input" class="field-input" type="text" maxlength="40" autocomplete="off" spellcheck="false" enterkeyhint="done" aria-describedby="prompt-error" autofocus>
+        <p id="prompt-error" class="field-error" role="alert"></p>
+      </div>
+      <footer class="dlg__actions">
+        <button id="prompt-ok" class="btn btn--primary" type="submit" value="ok" data-i18n="common.ok">OK</button>
+        <button id="prompt-cancel" class="btn btn--secondary" type="submit" value="cancel" formnovalidate data-i18n="common.cancel">Cancel</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-confirm" class="dlg dlg--small" aria-labelledby="confirm-title" aria-describedby="confirm-text">
+    <form method="dialog">
+      <header class="dlg__head">
+        <h2 id="confirm-title" class="dlg__title" data-i18n="confirm.title">Are you sure?</h2>
+      </header>
+      <div class="dlg__body">
+        <p id="confirm-text" data-i18n="confirm.text">Please confirm.</p>
+      </div>
+      <footer class="dlg__actions">
+        <button id="confirm-ok" class="btn btn--primary" type="submit" value="ok" data-i18n="confirm.ok">Yes</button>
+        <button id="confirm-cancel" class="btn btn--secondary" type="submit" value="cancel" formnovalidate autofocus data-i18n="common.cancel">Cancel</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <noscript>
+    <section class="noscript" aria-labelledby="ns-title-en">
+      <svg class="bolt" width="120" height="120" viewBox="0 0 200 200" aria-hidden="true" focusable="false"><use href="#bolt-think"/></svg>
+      <h2 id="ns-title-en">BoltBlocks needs JavaScript</h2>
+      <p>BoltBlocks is a block-coding editor, and it only runs with JavaScript turned on. Please enable JavaScript in your browser, then reload this page.</p>
+      <p><a href="README.md">How to run BoltBlocks</a></p>
+      <section lang="ar" dir="rtl" aria-labelledby="ns-title-ar">
+        <h2 id="ns-title-ar">يحتاج BoltBlocks إلى JavaScript</h2>
+        <p>BoltBlocks محرّر برمجة بالقوالب ولا يعمل إلا عند تفعيل JavaScript. يُرجى تفعيل JavaScript في المتصفّح ثم إعادة تحميل الصفحة.</p>
+        <p><a href="README.md">كيف تشغّل BoltBlocks</a></p>
+      </section>
+    </section>
+  </noscript>
+</body>
+</html>

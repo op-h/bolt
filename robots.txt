@@ -1,0 +1,8 @@
+# BoltBlocks: public static site, nothing to hide. Allow everything.
+User-agent: *
+Allow: /
+
+Sitemap: https://op-h.github.io/bolt/sitemap.xml
+
+# Note: crawlers read robots.txt only at the HOST ROOT. On a GitHub Pages project site
+# (op-h.github.io/bolt/) this file is not at the root, so it is advisory there.

@@ -1,0 +1,882 @@
+{
+  "version": 1,
+  "lessons": [
+    {
+      "id": "say-hello",
+      "title": {
+        "en": "Say hello",
+        "ar": "قل مرحبًا"
+      },
+      "goal": {
+        "en": "Make Bolt say “Hello!” when you click the green flag.",
+        "ar": "اجعل بولت يقول «مرحبًا!» عندما تضغط على العلم الأخضر."
+      },
+      "steps": [
+        {
+          "en": "Look at your starting block",
+          "ar": "انظر إلى كتلة البداية"
+        },
+        {
+          "en": "Find the say block",
+          "ar": "اعثر على كتلة القول"
+        },
+        {
+          "en": "Snap it on",
+          "ar": "ركّبها تحتها"
+        },
+        {
+          "en": "Type your words",
+          "ar": "اكتب كلماتك"
+        },
+        {
+          "en": "Click the green flag",
+          "ar": "اضغط على العلم الأخضر"
+        }
+      ],
+      "hints": [
+        {
+          "en": "Hi, I'm Bolt! Let's make me talk. Look in the coding area: the “when green flag clicked” block is already there. Everything under it will happen when you click the green flag.",
+          "ar": "مرحبًا، أنا بولت! لنجعلني أتكلم. انظر إلى منطقة البرمجة: كتلة «عند النقر على العلم الأخضر» موجودة هناك. كل ما تضعه تحتها سيحدث عندما تضغط على العلم الأخضر."
+        },
+        {
+          "en": "Open the purple Looks group on the left. Find the block “say Hello! for 2 seconds”.",
+          "ar": "افتح مجموعة المظهر البنفسجية على اليسار وابحث عن الكتلة «قُل مرحبًا! لمدة 2 ثانية»."
+        },
+        {
+          "en": "Drag that block and let go just under “when green flag clicked”. The two blocks snap together, like puzzle pieces.",
+          "ar": "اسحب هذه الكتلة وأفلتها تحت كتلة «عند النقر على العلم الأخضر» مباشرة. ستلتصق الكتلتان معًا كقطع الأحجية."
+        },
+        {
+          "en": "Want me to say something different? Click the white box that says Hello! and type your own words.",
+          "ar": "هل تريدني أن أقول شيئًا آخر؟ اضغط على المربع الأبيض الذي يحمل كلمة مرحبًا واكتب كلماتك أنت."
+        },
+        {
+          "en": "Now click the green flag above the stage. I will say it out loud in a speech bubble!",
+          "ar": "الآن اضغط على العلم الأخضر فوق المسرح. سأقولها في فقاعة كلام!"
+        }
+      ],
+      "starter": {
+        "name": "Say hello",
+        "selectedSpriteId": "sprite1",
+        "sprites": [
+          {
+            "id": "sprite1",
+            "name": {
+              "en": "Bolt",
+              "ar": "بولت"
+            },
+            "character": "bolt",
+            "x": 0,
+            "y": 0,
+            "direction": 90,
+            "size": 100,
+            "visible": true,
+            "xml": "<xml xmlns=\"https://developers.google.com/blockly/xml\"><block type=\"bb_when_flag\" x=\"40\" y=\"40\"></block></xml>"
+          }
+        ],
+        "variables": []
+      },
+      "check": {
+        "any": [
+          {
+            "type": "said",
+            "contains": "hello"
+          },
+          {
+            "type": "said",
+            "contains": "مرحب"
+          },
+          {
+            "type": "said",
+            "contains": "أهلا"
+          },
+          {
+            "type": "said",
+            "contains": "أهلًا"
+          }
+        ]
+      },
+      "success": {
+        "en": "You did it! Bolt said hello. Your very first program works!",
+        "ar": "أحسنت! قال بولت مرحبًا. أول برنامج لك يعمل!"
+      }
+    },
+    {
+      "id": "move-robot",
+      "title": {
+        "en": "Move the robot",
+        "ar": "حرّك الروبوت"
+      },
+      "goal": {
+        "en": "Send Bolt across the stage to the right side.",
+        "ar": "أرسل بولت عبر المسرح إلى الجهة اليمنى."
+      },
+      "steps": [
+        {
+          "en": "Look at your blocks",
+          "ar": "انظر إلى كتلك"
+        },
+        {
+          "en": "Find the move block",
+          "ar": "اعثر على كتلة الحركة"
+        },
+        {
+          "en": "Snap it on",
+          "ar": "ركّبها"
+        },
+        {
+          "en": "Make it a big move",
+          "ar": "اجعل الخطوات كثيرة"
+        },
+        {
+          "en": "Click the green flag",
+          "ar": "اضغط على العلم الأخضر"
+        },
+        {
+          "en": "Try a turn",
+          "ar": "جرّب الاستدارة"
+        }
+      ],
+      "hints": [
+        {
+          "en": "Bolt starts on the left side of the stage. Your blocks already put Bolt there every time you click the flag: “when green flag clicked” then “go to x: y:”.",
+          "ar": "يبدأ بولت من الجهة اليسرى للمسرح. كتلك تضعه هناك في كل مرة تضغط فيها على العلم: «عند النقر على العلم الأخضر» ثم «اذهب إلى س: ص:»."
+        },
+        {
+          "en": "Open the blue Motion group and find the block “move 10 steps”.",
+          "ar": "افتح مجموعة الحركة الزرقاء وابحث عن الكتلة «تحرّك 10 خطوة»."
+        },
+        {
+          "en": "Drag it and snap it under the “go to x: y:” block.",
+          "ar": "اسحبها وركّبها تحت كتلة «اذهب إلى س: ص:»."
+        },
+        {
+          "en": "One small step is tiny! Click the number in the block and change it to 300.",
+          "ar": "الخطوة الواحدة صغيرة جدًا! اضغط على الرقم داخل الكتلة وغيّره إلى 300."
+        },
+        {
+          "en": "Click the green flag. Watch Bolt zoom across the stage!",
+          "ar": "اضغط على العلم الأخضر وشاهد بولت ينطلق عبر المسرح!"
+        },
+        {
+          "en": "Extra fun: add a “turn right 15 degrees” block and then another “move 10 steps” to make Bolt change direction.",
+          "ar": "للمتعة: أضف كتلة «استدر يمينًا 15 درجة» ثم كتلة «تحرّك 10 خطوة» أخرى ليغيّر بولت اتجاهه."
+        }
+      ],
+      "starter": {
+        "name": "Move the robot",
+        "selectedSpriteId": "sprite1",
+        "sprites": [
+          {
+            "id": "sprite1",
+            "name": {
+              "en": "Bolt",
+              "ar": "بولت"
+            },
+            "character": "bolt",
+            "x": -150,
+            "y": 0,
+            "direction": 90,
+            "size": 100,
+            "visible": true,
+            "xml": "<xml xmlns=\"https://developers.google.com/blockly/xml\"><block type=\"bb_when_flag\" x=\"40\" y=\"40\"><next><block type=\"bb_goto_xy\"><value name=\"X\"><shadow type=\"math_number\"><field name=\"NUM\">-150</field></shadow></value><value name=\"Y\"><shadow type=\"math_number\"><field name=\"NUM\">0</field></shadow></value></block></next></block></xml>"
+          }
+        ],
+        "variables": []
+      },
+      "check": {
+        "type": "prop",
+        "sprite": "first",
+        "prop": "x",
+        "op": ">=",
+        "value": 100
+      },
+      "success": {
+        "en": "Whoosh! Bolt crossed the stage. You can control where Bolt goes!",
+        "ar": "رائع! عبر بولت المسرح. أنت تتحكم بمكان ذهاب بولت!"
+      }
+    },
+    {
+      "id": "draw-square",
+      "title": {
+        "en": "Draw a square",
+        "ar": "ارسم مربعًا"
+      },
+      "goal": {
+        "en": "Use repeat to make Bolt draw a square with the pen.",
+        "ar": "استخدم التكرار ليرسم بولت مربعًا بالقلم."
+      },
+      "steps": [
+        {
+          "en": "Look at your blocks",
+          "ar": "انظر إلى كتلك"
+        },
+        {
+          "en": "Add a repeat block",
+          "ar": "أضف كتلة التكرار"
+        },
+        {
+          "en": "A square has 4 sides",
+          "ar": "للمربع 4 أضلاع"
+        },
+        {
+          "en": "Draw one side",
+          "ar": "ارسم ضلعًا"
+        },
+        {
+          "en": "Turn at the corner",
+          "ar": "استدر عند الزاوية"
+        },
+        {
+          "en": "Click the green flag",
+          "ar": "اضغط على العلم الأخضر"
+        }
+      ],
+      "hints": [
+        {
+          "en": "Bolt has a pen! Your blocks already clear the stage, jump to the top-left corner, face right and put the pen down. Now Bolt is ready to draw.",
+          "ar": "مع بولت قلم! كتلك تمسح المسرح وتنقله إلى الزاوية العليا اليسرى وتجعله ينظر لليمين وتنزل القلم. بولت جاهز للرسم الآن."
+        },
+        {
+          "en": "Open the orange Control group. Drag the “repeat 10 times” block and snap it under “pen down”.",
+          "ar": "افتح مجموعة التحكم البرتقالية. اسحب كتلة «كرّر 10 مرّة» وركّبها تحت كتلة «أنزِل القلم»."
+        },
+        {
+          "en": "A square has 4 sides, so change the number in the repeat block from 10 to 4.",
+          "ar": "للمربع 4 أضلاع، لذلك غيّر الرقم في كتلة التكرار من 10 إلى 4."
+        },
+        {
+          "en": "Put a “move 10 steps” block inside the repeat (in its mouth). Change 10 to 100. That draws one side.",
+          "ar": "ضع كتلة «تحرّك 10 خطوة» داخل التكرار (في فمه) وغيّر الرقم من 10 إلى 100. هذا يرسم ضلعًا واحدًا."
+        },
+        {
+          "en": "Under “move 10 steps”, still inside the repeat, add “turn right 15 degrees” and change 15 to 90. A square corner is a 90 degree turn!",
+          "ar": "تحت كتلة «تحرّك 10 خطوة» وما زلت داخل التكرار، أضف «استدر يمينًا 15 درجة» وغيّر 15 إلى 90. زاوية المربع استدارة قدرها 90 درجة!"
+        },
+        {
+          "en": "Click the green flag and watch Bolt draw your square.",
+          "ar": "اضغط على العلم الأخضر وشاهد بولت يرسم مربعك."
+        },
+        {
+          "en": "Extra fun: change the numbers to repeat 3 and turn 120. What shape do you get?",
+          "ar": "للمتعة: غيّر الأرقام إلى تكرار 3 واستدارة 120. أي شكل تحصل عليه؟"
+        }
+      ],
+      "starter": {
+        "name": "Draw a square",
+        "selectedSpriteId": "sprite1",
+        "sprites": [
+          {
+            "id": "sprite1",
+            "name": {
+              "en": "Bolt",
+              "ar": "بولت"
+            },
+            "character": "bolt",
+            "x": -50,
+            "y": 50,
+            "direction": 90,
+            "size": 100,
+            "visible": true,
+            "xml": "<xml xmlns=\"https://developers.google.com/blockly/xml\"><block type=\"bb_when_flag\" x=\"40\" y=\"40\"><next><block type=\"bb_pen_clear\"><next><block type=\"bb_pen_up\"><next><block type=\"bb_goto_xy\"><value name=\"X\"><shadow type=\"math_number\"><field name=\"NUM\">-50</field></shadow></value><value name=\"Y\"><shadow type=\"math_number\"><field name=\"NUM\">50</field></shadow></value><next><block type=\"bb_point_dir\"><value name=\"DIR\"><shadow type=\"math_number\"><field name=\"NUM\">90</field></shadow></value><next><block type=\"bb_pen_down\"></block></next></block></next></block></next></block></next></block></next></block></xml>"
+          }
+        ],
+        "variables": []
+      },
+      "check": {
+        "all": [
+          {
+            "type": "penSegments",
+            "min": 4
+          },
+          {
+            "type": "blockUsed",
+            "block": "controls_repeat_ext"
+          }
+        ]
+      },
+      "success": {
+        "en": "A perfect square! Repeat saved you from using the same blocks four times.",
+        "ar": "مربع رائع! وفّر لك التكرار استخدام الكتل نفسها أربع مرات."
+      }
+    },
+    {
+      "id": "keyboard-controls",
+      "title": {
+        "en": "Keyboard controls",
+        "ar": "التحكم بلوحة المفاتيح"
+      },
+      "goal": {
+        "en": "Move Bolt left and right with the arrow keys.",
+        "ar": "حرّك بولت يمينًا ويسارًا بمفاتيح الأسهم."
+      },
+      "steps": [
+        {
+          "en": "Look at the key blocks",
+          "ar": "انظر إلى كتل المفاتيح"
+        },
+        {
+          "en": "Find “change x”",
+          "ar": "اعثر على «غيّر س»"
+        },
+        {
+          "en": "Right arrow moves right",
+          "ar": "السهم الأيمن يحرك يمينًا"
+        },
+        {
+          "en": "Left arrow moves left",
+          "ar": "السهم الأيسر يحرك يسارًا"
+        },
+        {
+          "en": "Click the stage and play",
+          "ar": "اضغط على المسرح والعب"
+        },
+        {
+          "en": "Tablet? Use the arrow pad",
+          "ar": "لوح إلكتروني؟ استخدم لوحة الأسهم"
+        }
+      ],
+      "hints": [
+        {
+          "en": "Let's drive me with the keyboard! Two starting blocks are ready: one waits for the right arrow key and one for the left arrow key.",
+          "ar": "لنتحكم بي بلوحة المفاتيح! هناك كتلتا بداية جاهزتان: واحدة تنتظر السهم الأيمن وأخرى تنتظر السهم الأيسر."
+        },
+        {
+          "en": "Open the blue Motion group and find “change x by”. This block slides Bolt left or right.",
+          "ar": "افتح مجموعة الحركة الزرقاء وابحث عن «غيّر س بمقدار». هذه الكتلة تزحلق بولت يمينًا أو يسارًا."
+        },
+        {
+          "en": "Snap a “change x by” block under the right arrow key block and leave it at 10.",
+          "ar": "ركّب كتلة «غيّر س بمقدار» تحت كتلة السهم الأيمن واترك الرقم 10."
+        },
+        {
+          "en": "Snap another “change x by” under the left arrow key block. Change it to -10, a minus number goes the other way.",
+          "ar": "ركّب كتلة «غيّر س بمقدار» أخرى تحت كتلة السهم الأيسر وغيّرها إلى -10. الرقم السالب يذهب في الاتجاه المعاكس."
+        },
+        {
+          "en": "Click on the stage (or press the green flag) so the keys go to your program, then press the left and right arrow keys.",
+          "ar": "اضغط على المسرح (أو على العلم الأخضر) كي تصل المفاتيح إلى برنامجك، ثم اضغط السهمين الأيمن والأيسر."
+        },
+        {
+          "en": "On a tablet there is no keyboard? Press the arrow pad button under the stage and tap the arrows on the screen.",
+          "ar": "لا توجد لوحة مفاتيح على اللوح الإلكتروني؟ اضغط زر لوحة الأسهم تحت المسرح واضغط الأسهم على الشاشة."
+        }
+      ],
+      "starter": {
+        "name": "Keyboard controls",
+        "selectedSpriteId": "sprite1",
+        "sprites": [
+          {
+            "id": "sprite1",
+            "name": {
+              "en": "Bolt",
+              "ar": "بولت"
+            },
+            "character": "bolt",
+            "x": -100,
+            "y": 0,
+            "direction": 90,
+            "size": 100,
+            "visible": true,
+            "xml": "<xml xmlns=\"https://developers.google.com/blockly/xml\"><block type=\"bb_when_key\" x=\"40\" y=\"40\"><field name=\"KEY\">right</field></block><block type=\"bb_when_key\" x=\"40\" y=\"200\"><field name=\"KEY\">left</field></block></xml>"
+          }
+        ],
+        "variables": []
+      },
+      "check": {
+        "all": [
+          {
+            "type": "keyPressed",
+            "key": "right"
+          },
+          {
+            "type": "keyPressed",
+            "key": "left"
+          },
+          {
+            "type": "blockUsed",
+            "block": "bb_change_x"
+          }
+        ]
+      },
+      "success": {
+        "en": "You are the pilot! Bolt moves exactly when you press the keys.",
+        "ar": "أنت القائد! يتحرك بولت تمامًا عندما تضغط المفاتيح."
+      }
+    },
+    {
+      "id": "bounce-forever",
+      "title": {
+        "en": "Bounce forever",
+        "ar": "ارتدّ إلى الأبد"
+      },
+      "goal": {
+        "en": "Make Bolt move on and on, and bounce back from the edges.",
+        "ar": "اجعل بولت يتحرك باستمرار ويرتد عن الحواف."
+      },
+      "steps": [
+        {
+          "en": "Look at your blocks",
+          "ar": "انظر إلى كتلك"
+        },
+        {
+          "en": "Add a forever loop",
+          "ar": "أضف حلقة باستمرار"
+        },
+        {
+          "en": "Move a little each time",
+          "ar": "تحرك قليلًا كل مرة"
+        },
+        {
+          "en": "Bounce at the edge",
+          "ar": "ارتدّ عند الحافة"
+        },
+        {
+          "en": "Click the green flag",
+          "ar": "اضغط على العلم الأخضر"
+        },
+        {
+          "en": "Stop when you are done",
+          "ar": "أوقفه عندما تنتهي"
+        }
+      ],
+      "hints": [
+        {
+          "en": "Bolt starts on the left, facing right. You want me to keep moving without stopping. For that you need a loop that never ends!",
+          "ar": "يبدأ بولت من اليسار وهو ينظر لليمين. تريدني أن أتحرك دون توقف، ولهذا تحتاج إلى حلقة لا تنتهي!"
+        },
+        {
+          "en": "Open the orange Control group, drag “forever” and snap it under “when green flag clicked”.",
+          "ar": "افتح مجموعة التحكم البرتقالية واسحب «كرّر دائمًا» وركّبها تحت «عند النقر على العلم الأخضر»."
+        },
+        {
+          "en": "Put “move 10 steps” inside the forever loop and change it to 5. Bolt takes five small steps again and again.",
+          "ar": "ضع «تحرّك 10 خطوة» داخل حلقة باستمرار وغيّرها إلى 5. سيخطو بولت خمس خطوات صغيرة مرارًا وتكرارًا."
+        },
+        {
+          "en": "Under “move 10 steps”, still inside the loop, add “if on edge, bounce” from the Motion group. It turns Bolt around when it touches the edge.",
+          "ar": "تحت «تحرّك 10 خطوة» وما زلت داخل الحلقة، أضف «إذا لمست الحافة فارتدّ» من مجموعة الحركة. تدير بولت عندما يلمس الحافة."
+        },
+        {
+          "en": "Click the green flag and watch Bolt bounce from side to side.",
+          "ar": "اضغط على العلم الأخضر وشاهد بولت يرتد من جانب إلى آخر."
+        },
+        {
+          "en": "A forever loop never stops by itself. Press the red stop button when you have seen enough. Try the turtle button to see it in slow motion!",
+          "ar": "حلقة باستمرار لا تتوقف وحدها. اضغط زر الإيقاف الأحمر عندما تكتفي. جرّب زر السلحفاة لترى ذلك بحركة بطيئة!"
+        }
+      ],
+      "starter": {
+        "name": "Bounce forever",
+        "selectedSpriteId": "sprite1",
+        "sprites": [
+          {
+            "id": "sprite1",
+            "name": {
+              "en": "Bolt",
+              "ar": "بولت"
+            },
+            "character": "bolt",
+            "x": -100,
+            "y": 0,
+            "direction": 90,
+            "size": 100,
+            "visible": true,
+            "xml": "<xml xmlns=\"https://developers.google.com/blockly/xml\"><block type=\"bb_when_flag\" x=\"40\" y=\"40\"></block></xml>"
+          }
+        ],
+        "variables": []
+      },
+      "check": {
+        "all": [
+          {
+            "type": "blockUsed",
+            "block": "bb_forever"
+          },
+          {
+            "type": "blockUsed",
+            "block": "bb_bounce_edge"
+          },
+          {
+            "any": [
+              {
+                "type": "prop",
+                "sprite": "first",
+                "prop": "x",
+                "op": ">=",
+                "value": 150
+              },
+              {
+                "type": "prop",
+                "sprite": "first",
+                "prop": "x",
+                "op": "<=",
+                "value": -150
+              }
+            ]
+          }
+        ]
+      },
+      "success": {
+        "en": "Boing! A forever loop plus a bounce, and Bolt never gets stuck at the edge.",
+        "ar": "بوينغ! حلقة باستمرار مع الارتداد، فلا يعلق بولت عند الحافة أبدًا."
+      }
+    },
+    {
+      "id": "random-positions",
+      "title": {
+        "en": "Random jumps",
+        "ar": "قفزات عشوائية"
+      },
+      "goal": {
+        "en": "Make Bolt jump to a surprise place again and again.",
+        "ar": "اجعل بولت يقفز إلى أماكن مفاجئة مرارًا وتكرارًا."
+      },
+      "steps": [
+        {
+          "en": "Look at your blocks",
+          "ar": "انظر إلى كتلك"
+        },
+        {
+          "en": "Add a repeat block",
+          "ar": "أضف كتلة التكرار"
+        },
+        {
+          "en": "Add a go to block",
+          "ar": "أضف كتلة الذهاب"
+        },
+        {
+          "en": "Pick a random x",
+          "ar": "اختر س عشوائيًا"
+        },
+        {
+          "en": "Pick a random y",
+          "ar": "اختر ص عشوائيًا"
+        },
+        {
+          "en": "Wait, then run it",
+          "ar": "انتظر ثم شغّل"
+        }
+      ],
+      "hints": [
+        {
+          "en": "Let's surprise everyone! I will jump to a different place every time. Your “when green flag clicked” block is ready.",
+          "ar": "لنفاجئ الجميع! سأقفز إلى مكان مختلف في كل مرة. كتلة «عند النقر على العلم الأخضر» جاهزة."
+        },
+        {
+          "en": "From the Control group, drag “repeat 10 times” under “when green flag clicked”. Leave it at 10.",
+          "ar": "من مجموعة التحكم اسحب «كرّر 10 مرّة» تحت «عند النقر على العلم الأخضر» واتركها على 10."
+        },
+        {
+          "en": "From the Motion group, put “go to x: y:” inside the repeat.",
+          "ar": "من مجموعة الحركة ضع «اذهب إلى س: ص:» داخل التكرار."
+        },
+        {
+          "en": "Open the green Operators group. Drag “pick random 1 to 10” into the x slot of “go to x: y:”. Change it to pick from -200 to 200.",
+          "ar": "افتح مجموعة العمليات الخضراء. اسحب «اختر عددًا عشوائيًا من 1 إلى 10» إلى خانة س في «اذهب إلى س: ص:» وغيّرها لتختار من -200 إلى 200."
+        },
+        {
+          "en": "Do the same for the y slot, but pick from -150 to 150 because the stage is shorter than it is wide.",
+          "ar": "افعل الشيء نفسه في خانة ص، لكن اختر من -150 إلى 150 لأن المسرح أقصر من عرضه."
+        },
+        {
+          "en": "Add “wait 1 seconds” under “go to x: y:” inside the repeat and set it to 0.5 so you can see each jump. Then click the green flag!",
+          "ar": "أضف «انتظر 1 ثانية» تحت «اذهب إلى س: ص:» داخل التكرار واجعلها 0.5 لترى كل قفزة. ثم اضغط على العلم الأخضر!"
+        }
+      ],
+      "starter": {
+        "name": "Random jumps",
+        "selectedSpriteId": "sprite1",
+        "sprites": [
+          {
+            "id": "sprite1",
+            "name": {
+              "en": "Bolt",
+              "ar": "بولت"
+            },
+            "character": "bolt",
+            "x": 0,
+            "y": 0,
+            "direction": 90,
+            "size": 100,
+            "visible": true,
+            "xml": "<xml xmlns=\"https://developers.google.com/blockly/xml\"><block type=\"bb_when_flag\" x=\"40\" y=\"40\"></block></xml>"
+          }
+        ],
+        "variables": []
+      },
+      "check": {
+        "all": [
+          {
+            "type": "blockUsed",
+            "block": "math_random_int"
+          },
+          {
+            "type": "blockUsed",
+            "block": "bb_goto_xy"
+          },
+          {
+            "any": [
+              {
+                "type": "prop",
+                "sprite": "first",
+                "prop": "x",
+                "op": ">",
+                "value": 0
+              },
+              {
+                "type": "prop",
+                "sprite": "first",
+                "prop": "x",
+                "op": "<",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "success": {
+        "en": "Surprise! Random numbers make a different result each time. Games use this a lot!",
+        "ar": "مفاجأة! الأرقام العشوائية تعطي نتيجة مختلفة في كل مرة. الألعاب تستخدمها كثيرًا!"
+      }
+    },
+    {
+      "id": "score-variable",
+      "title": {
+        "en": "Keep score",
+        "ar": "احسب النقاط"
+      },
+      "goal": {
+        "en": "Use a variable called score and make it count up to 5.",
+        "ar": "استخدم متغيّرًا اسمه score واجعله يعدّ حتى 5."
+      },
+      "steps": [
+        {
+          "en": "Meet the score variable",
+          "ar": "تعرّف على متغيّر النقاط"
+        },
+        {
+          "en": "Add a repeat block",
+          "ar": "أضف كتلة التكرار"
+        },
+        {
+          "en": "Add 1 to the score",
+          "ar": "أضف 1 إلى النقاط"
+        },
+        {
+          "en": "Wait a moment",
+          "ar": "انتظر لحظة"
+        },
+        {
+          "en": "Click the green flag",
+          "ar": "اضغط على العلم الأخضر"
+        }
+      ],
+      "hints": [
+        {
+          "en": "A variable is a box with a name that remembers a number. I made one called score for you, and it shows on the stage. Your blocks already set it back to 0 when the flag is clicked.",
+          "ar": "المتغيّر صندوق له اسم يتذكر رقمًا. صنعت لك متغيّرًا اسمه score وهو يظهر على المسرح. كتلك تعيده إلى 0 عندما تضغط على العلم."
+        },
+        {
+          "en": "From the Control group, snap “repeat 10 times” under “set score to 0” and change 10 to 5.",
+          "ar": "من مجموعة التحكم ركّب «كرّر 10 مرّة» تحت «اجعل score يساوي 0» وغيّر 10 إلى 5."
+        },
+        {
+          "en": "Open the orange Variables group and drag “change score by 1” inside the repeat. Choose score in the dropdown and keep it at 1.",
+          "ar": "افتح مجموعة المتغيّرات البرتقالية واسحب «غيّر score بمقدار 1» داخل التكرار. اختر score من القائمة واترك الرقم 1."
+        },
+        {
+          "en": "Add “wait 1 seconds” under it, inside the repeat, and set it to 0.5. Now the score counts slowly so you can watch it grow.",
+          "ar": "أضف «انتظر 1 ثانية» تحتها داخل التكرار واجعلها 0.5. الآن تعدّ النقاط ببطء لتراقبها وهي تكبر."
+        },
+        {
+          "en": "Click the green flag and watch the score on the stage count up to 5!",
+          "ar": "اضغط على العلم الأخضر وراقب النقاط على المسرح وهي تعدّ حتى 5!"
+        }
+      ],
+      "starter": {
+        "name": "Keep score",
+        "selectedSpriteId": "sprite1",
+        "sprites": [
+          {
+            "id": "sprite1",
+            "name": {
+              "en": "Bolt",
+              "ar": "بولت"
+            },
+            "character": "bolt",
+            "x": 0,
+            "y": 0,
+            "direction": 90,
+            "size": 100,
+            "visible": true,
+            "xml": "<xml xmlns=\"https://developers.google.com/blockly/xml\"><block type=\"bb_when_flag\" x=\"40\" y=\"40\"><next><block type=\"variables_set\"><field name=\"VAR\">score</field><value name=\"VALUE\"><shadow type=\"math_number\"><field name=\"NUM\">0</field></shadow></value></block></next></block></xml>"
+          }
+        ],
+        "variables": [
+          {
+            "name": "score",
+            "value": 0,
+            "visible": true
+          }
+        ]
+      },
+      "check": {
+        "all": [
+          {
+            "type": "variable",
+            "name": "score",
+            "op": ">=",
+            "value": 5
+          },
+          {
+            "type": "blockUsed",
+            "block": "math_change"
+          }
+        ]
+      },
+      "success": {
+        "en": "Score! Your variable remembered the number. Now you can build a real game.",
+        "ar": "نقاط! تذكّر متغيّرك الرقم. الآن يمكنك صنع لعبة حقيقية."
+      }
+    },
+    {
+      "id": "catch-the-star",
+      "title": {
+        "en": "Catch the star",
+        "ar": "التقط النجمة"
+      },
+      "goal": {
+        "en": "Make a game: move Bolt to catch the falling star three times.",
+        "ar": "اصنع لعبة: حرّك بولت ليلتقط النجمة الساقطة ثلاث مرات."
+      },
+      "steps": [
+        {
+          "en": "Meet your two sprites",
+          "ar": "تعرّف على شخصيتيك"
+        },
+        {
+          "en": "Bolt: right arrow",
+          "ar": "بولت: السهم الأيمن"
+        },
+        {
+          "en": "Bolt: left arrow",
+          "ar": "بولت: السهم الأيسر"
+        },
+        {
+          "en": "Bolt: start at score 0",
+          "ar": "بولت: ابدأ بـ 0 نقطة"
+        },
+        {
+          "en": "Star: start the loop",
+          "ar": "النجمة: ابدأ الحلقة"
+        },
+        {
+          "en": "Star: drop from the top",
+          "ar": "النجمة: ابدأ من الأعلى"
+        },
+        {
+          "en": "Star: fall down",
+          "ar": "النجمة: اسقط للأسفل"
+        },
+        {
+          "en": "Star: score when caught",
+          "ar": "النجمة: نقطة عند الالتقاط"
+        },
+        {
+          "en": "Play and catch 3 stars",
+          "ar": "العب والتقط 3 نجمات"
+        }
+      ],
+      "hints": [
+        {
+          "en": "This one is a real game! You have two sprites: Bolt at the bottom and the Star at the top. Click a sprite in the Sprites list to see and edit its blocks. A score variable is already on the stage.",
+          "ar": "هذه لعبة حقيقية! لديك شخصيتان: بولت في الأسفل والنجمة في الأعلى. اضغط على شخصية في قائمة الشخصيات لترى كتلها وتعدّلها. متغيّر score موجود على المسرح."
+        },
+        {
+          "en": "Start with Bolt (click it in the list). Drag “when … key pressed” from Events, choose the right arrow, and snap “change x by” under it with 20.",
+          "ar": "ابدأ ببولت (اضغط عليه في القائمة). اسحب «عند الضغط على المفتاح …» من الأحداث واختر السهم الأيمن، وركّب تحته «غيّر س بمقدار» بالرقم 20."
+        },
+        {
+          "en": "Do it again for the left arrow: another “when … key pressed” with “change x by” set to -20.",
+          "ar": "كرر ذلك للسهم الأيسر: كتلة «عند الضغط على المفتاح …» أخرى مع «غيّر س بمقدار» بالرقم -20."
+        },
+        {
+          "en": "Still on Bolt: add “when green flag clicked” and snap “set score to 0” under it with score and 0, so every game starts fresh.",
+          "ar": "ما زلت مع بولت: أضف «عند النقر على العلم الأخضر» وركّب تحته «اجعل score يساوي 0» مع score والرقم 0، فتبدأ كل لعبة من جديد."
+        },
+        {
+          "en": "Now click the Star in the Sprites list. Start with “when green flag clicked” and snap “forever” under it.",
+          "ar": "الآن اضغط على النجمة في قائمة الشخصيات. ابدأ بـ «عند النقر على العلم الأخضر» وركّب تحتها «كرّر دائمًا»."
+        },
+        {
+          "en": "Inside forever, put “go to x: y:”. For x use “pick random 1 to 10” from -200 to 200, and set y to 150. The star appears at a random place at the top.",
+          "ar": "داخل باستمرار ضع «اذهب إلى س: ص:». في خانة س استخدم «اختر عددًا عشوائيًا من 1 إلى 10» من -200 إلى 200، واجعل ص تساوي 150. تظهر النجمة في مكان عشوائي في الأعلى."
+        },
+        {
+          "en": "Under “go to x: y:” add “repeat 10 times” and set it to 30. Inside it put “change y by” with -10. The star falls a little 30 times!",
+          "ar": "تحت «اذهب إلى س: ص:» أضف «كرّر 10 مرّة» واجعلها 30. داخلها ضع «غيّر ص بمقدار» بالرقم -10. تسقط النجمة قليلًا 30 مرة!"
+        },
+        {
+          "en": "Inside the repeat, under “change y by”, add “if” with “touching … ?” and pick Bolt. Inside the if put “change score by 1” (score, 1) and “go to x: y:” with y 150 so the star jumps back up.",
+          "ar": "داخل التكرار وتحت «غيّر ص بمقدار» أضف «إذا» مع «هل تلمس … ؟» واختر بولت. داخل الشرط ضع «غيّر score بمقدار 1» (score، 1) و«اذهب إلى س: ص:» مع ص تساوي 150 لتقفز النجمة إلى الأعلى."
+        },
+        {
+          "en": "Click the green flag, then click the stage and use the arrow keys. Catch the star three times to win!",
+          "ar": "اضغط على العلم الأخضر ثم اضغط على المسرح واستخدم مفاتيح الأسهم. التقط النجمة ثلاث مرات لتفوز!"
+        }
+      ],
+      "starter": {
+        "name": "Catch the star",
+        "selectedSpriteId": "sprite1",
+        "sprites": [
+          {
+            "id": "sprite1",
+            "name": {
+              "en": "Bolt",
+              "ar": "بولت"
+            },
+            "character": "bolt",
+            "x": 0,
+            "y": -130,
+            "direction": 90,
+            "size": 100,
+            "visible": true,
+            "xml": "<xml xmlns=\"https://developers.google.com/blockly/xml\"></xml>"
+          },
+          {
+            "id": "sprite2",
+            "name": {
+              "en": "Star",
+              "ar": "نجمة"
+            },
+            "character": "sunny",
+            "x": 0,
+            "y": 130,
+            "direction": 90,
+            "size": 80,
+            "visible": true,
+            "xml": "<xml xmlns=\"https://developers.google.com/blockly/xml\"></xml>"
+          }
+        ],
+        "variables": [
+          {
+            "name": "score",
+            "value": 0,
+            "visible": true
+          }
+        ]
+      },
+      "check": {
+        "type": "variable",
+        "name": "score",
+        "op": ">=",
+        "value": 3
+      },
+      "success": {
+        "en": "You caught the stars and built a whole game! Now change it any way you like.",
+        "ar": "التقطت النجمات وصنعت لعبة كاملة! غيّرها الآن كما تحب."
+      }
+    }
+  ]
+}

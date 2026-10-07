@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Single URL only: lessons have no deep links (docs/seo.md). -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://op-h.github.io/bolt/</loc>
+  </url>
+</urlset>

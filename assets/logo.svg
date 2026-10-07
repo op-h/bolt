@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 56" width="250" height="56" role="img" aria-labelledby="bb-logo-title">
+  <title id="bb-logo-title">BoltBlocks</title>
+  <!-- For light backgrounds. "Bolt" is ink #1B1B3A (16.6:1 on white), "Blocks" is #2F6FD6 (4.81:1 on white).
+       textLength pins the wordmark width so fallback fonts cannot reflow it. In the app header, use live text + logo-mark instead. -->
+  <svg x="0" y="4" width="48" height="48" viewBox="0 0 48 48">
+    <path d="M7 15a5 5 0 0 1 5-5h7a5 5 0 0 1 10 0h7a5 5 0 0 1 5 5v21a5 5 0 0 1-5 5H12a5 5 0 0 1-5-5z" fill="#4C97FF" stroke="#1B1B3A" stroke-width="3" stroke-linejoin="round"/>
+    <polygon points="26,16 17,27 23,27 20,37 31,24 25,24" fill="#FFD60A" stroke="#1B1B3A" stroke-width="2.5" stroke-linejoin="round"/>
+  </svg>
+  <text x="58" y="38" font-family="Nunito, 'Arial Rounded MT Bold', 'Trebuchet MS', system-ui, sans-serif" font-size="32" font-weight="800" textLength="186" lengthAdjust="spacingAndGlyphs"><tspan fill="#1B1B3A">Bolt</tspan><tspan fill="#2F6FD6">Blocks</tspan></text>
+</svg>
