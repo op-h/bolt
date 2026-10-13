@@ -628,8 +628,10 @@
           // Scratch idiom (ADR 0006): dropdowns are white pills with ink text.
           sel + ' .blocklyDropdownRect { fill: #fff !important; stroke: none; rx: 14px; ry: 14px; }',
           sel + ' .blocklyHtmlInput { color: ' + INK + '; }',
-          sel + '.blocklyDropDownDiv .blocklyMenuItemContent, ' +
-            sel + '.blocklyWidgetDiv .blocklyMenuItemContent { color: ' + INK + '; }',
+          // Dropdown lists sit on a block-coloured or white surface, so ink is right there. The
+          // right-click menu (blocklyWidgetDiv) is themed by css/style.css; forcing ink on it made
+          // the labels invisible on the dark-mode menu.
+          sel + '.blocklyDropDownDiv .blocklyMenuItemContent { color: ' + INK + '; }',
           // Default look for a block that is executing; PRISM may restyle .bb-running.
           sel + ' .bb-running>.blocklyPath { stroke: ' + INK + '; stroke-width: 4px; }'
         ]);

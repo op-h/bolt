@@ -1758,6 +1758,10 @@
 }
 .blocklyWidgetDiv .blocklyMenuItemHighlight { background-color: var(--bb-panel); border-inline-start-color: var(--bb-accent); }
 .blocklyWidgetDiv .blocklyMenuItemDisabled { color: var(--bb-ink-muted); }
+/* The editor host isolates its stacking context (isolation: isolate), so the right-click menu cannot rise
+   above the zoom buttons that float over it. Hide them while the menu is open instead of letting them
+   draw on top of its labels. */
+.panel--workspace:has(.blocklyContextMenu) .zoom-controls { visibility: hidden; }
 .blocklyDropDownDiv .blocklyMenuItem { min-block-size: 2.5rem; display: flex; align-items: center; font-weight: var(--bb-fw-display); }
 
 /* ----- tooltip ----- */
